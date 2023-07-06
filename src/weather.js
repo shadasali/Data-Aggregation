@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import "./weather.css"
 import Map from "./map"
 import axios from 'axios';
+import { BsFillChatQuoteFill } from "react-icons/bs";
 
 
 const WeatherForecast = () => {
@@ -51,6 +52,7 @@ const WeatherForecast = () => {
     } catch (error) {
         console.error('Error fetching city coordinates:', error);
     }
+
     };
 
 
@@ -229,7 +231,11 @@ const WeatherForecast = () => {
             return 'Extreme Intensity';
 
     };
+    const [showOptions, setShowOptions] = useState(false);
 
+    const handleSMSNav = () =>{
+        setShowOptions(!showOptions);
+    };
 
     return (
         <>
@@ -238,6 +244,17 @@ const WeatherForecast = () => {
         <button onClick={handleWeatherNav} className="news-navbar-brand">Weather</button>
         <button onClick={handleNewsNav} className="news-navbar-brand">News</button>
         <h2 className='news-title'>Weather</h2>
+        <div className="settings-container">
+        <button onClick = {handleSMSNav} className="sms-button">
+        <BsFillChatQuoteFill className="sms-icon" />
+        </button>
+        {showOptions && (
+        <ul className="options-list">
+          <li>Enable SMS Notifications</li>
+          {/* Add more options as needed */}
+        </ul>
+        )}
+        </div>
         </nav>
         <div className='weather-main'>
         <div className="weather-container">

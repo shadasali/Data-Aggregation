@@ -89,3 +89,42 @@ p {
 .weather-navbar button:first-child {
     margin-left: 20px;
   }
+
+  .settings-container {
+    position: relative;
+    margin-left:auto;
+    display: inline-block;
+  }
+
+  .sms-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: hand;
+    margin-left: auto;
+  }
+  
+  .sms-icon {
+    font-size: 2.0rem; /* Adjust the size as needed */
+  }
+
+  .options-list {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    list-style-type: none;
+  }
+  
+  .options-list li {
+    padding: 8px;
+    cursor: pointer;
+  }
+  
+  .options-list li:hover {
+    background-color: #f2f2f2;
+  }

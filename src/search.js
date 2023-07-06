@@ -48,34 +48,6 @@ const SearchPage = () => {
 
   const navigate = useNavigate();
 
-  const handleMap = async () => {
-
-
-    try {
-      const response = await axios.get(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-          searchQuery
-        )}.json?access_token=${process.env.REACT_APP_MAPBOX_ACCESS_TOKEN}`
-      );
-
-      const { features } = response.data;
-      if (features.length > 0) {
-        const [longitude, latitude] = features[0].center;
-        selectedCity.latitude = latitude;
-        selectedCity.longitude = longitude;
-
-        console.log(selectedCity.latitude);
-        console.log(selectedCity.longitude);
-
-        navigate('/map', { state: { selectedCity } });
-      } else {
-        console.log('City not found.');
-      }
-    } catch (error) {
-      console.error('Error fetching city coordinates:', error);
-    }
-  };
-
   const handleWeatherForecast = async () => {
     try {
       const response = await axios.get(
