@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from "react-router-dom";
 import './news.css';
-
+import { BsFillChatQuoteFill } from "react-icons/bs";
 
 const News = () => {
   const [news, setNews] = useState([]);
@@ -83,6 +83,18 @@ const News = () => {
     fetchNews();
   }, [selectedCity, generateNewsDescription]);
 
+  const [showOptions, setShowOptions] = useState(false);
+
+    const handleSMSNav = () =>{
+        setShowOptions(!showOptions);
+    };
+
+    const handleOptions = (option) =>{
+        if (option === 'sms'){
+            navigate('/sms');
+        }
+    }
+
   return (
     <div>
       <nav className="news-navbar">
@@ -90,6 +102,17 @@ const News = () => {
         <button onClick={handleWeatherNav} className="news-navbar-brand">Weather</button>
         <button onClick={handleNewsNav} className="news-navbar-brand">News</button>
         <h2 className='news-title'>Latest News</h2>
+        <div className="settings-container">
+        <button onClick = {handleSMSNav} className="sms-button">
+        <BsFillChatQuoteFill className="sms-icon" />
+        </button>
+        {showOptions && (
+        <ul className="options-list">
+          <li onClick = {() => handleOptions('sms')}>Enable SMS Notifications</li>
+          {/* Add more options as needed */}
+        </ul>
+        )}
+        </div>
       </nav>
       <div className="weather-container">
         <h2>News Description</h2>

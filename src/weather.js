@@ -40,11 +40,6 @@ const WeatherForecast = () => {
             selectedCity.latitude = latitude;
             selectedCity.longitude = longitude;
 
-
-            console.log(selectedCity.latitude);
-            console.log(selectedCity.longitude);
-
-
             navigate('/news', { state: { selectedCity } });
         } else {
             console.log('City not found.');
@@ -84,7 +79,6 @@ const WeatherForecast = () => {
 
 
             const data = await response.json();
-            console.log(data);
             const generatedDescription = data.choices[0].text.trim(); // Extract the generated weather description
             setWeatherDescription(generatedDescription); // Set the weather description state
         } catch (error) {
@@ -98,32 +92,26 @@ const WeatherForecast = () => {
     useEffect(() => {
         const fetchWeatherData = async () => {
             try {
-                const apiKey = process.env.REACT_APP_WEATHERAPI_API_KEY;
-                const apiUrl = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${selectedCity.latitude},${selectedCity.longitude}&days=7&aqi=yes`;
-
-
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-
-
-                setWeatherData(data);
-                generateWeatherDescription();
+              const response = await axios.get(`http://localhost:8000/weather/${selectedCity.name}`);
+              const data = response.data;
+              setWeatherData(data);
+              generateWeatherDescription();
             } catch (error) {
-                console.error('Error fetching weather data:', error);
+              console.error('Error fetching weather data:', error);
             }
-        };
+          };
 
 
         const getPastDate = () => {
             const currentDate = new Date();
             const pastDate = new Date(currentDate);
-            pastDate.setDate(currentDate.getDate() - 2); // Subtract 1 day
+            pastDate.setDate(currentDate.getDate() - 1); // Subtract 1 day
             return pastDate.toISOString().split('T')[0]; // Format the date as "YYYY-MM-DD"
         };
         const getWeekAgoDate = () => {
             const currentDate = new Date();
             const weekAgoDate = new Date(currentDate);
-            weekAgoDate.setDate(currentDate.getDate() - 8); // Subtract 8 days to get a week ago
+            weekAgoDate.setDate(currentDate.getDate() - 6); // Subtract 8 days to get a week ago
             return weekAgoDate.toISOString().split('T')[0]; // Format the date as "YYYY-MM-DD"
         };
 
@@ -137,9 +125,9 @@ const WeatherForecast = () => {
 
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-                console.log(data);
+
                 setHistoricalWeatherData(data);
-                console.log(historicalWeatherData);
+
             } catch (error) {
                 console.error('Error fetching historical weather data:', error);
             }
@@ -162,7 +150,7 @@ const WeatherForecast = () => {
             dayOfWeekIndex = 0
 
 
-        console.log(dayOfWeekIndex);
+
         return daysOfWeek[dayOfWeekIndex];
     };
 
@@ -177,7 +165,7 @@ const WeatherForecast = () => {
 
 
     const getWeatherIconUrl = (iconCode, isDay) => {
-        console.log(iconCode);
+
         // Assuming the weather icons are stored in the "weather-icons" directory
         const iconBaseUrl = '/weather-icons/';
 
@@ -189,7 +177,7 @@ const WeatherForecast = () => {
 
         // Construct the URL for the weather icon
         const iconUrl = `${iconBaseUrl}${folder}/${fileName}`;
-        console.log(iconUrl);
+
         return iconUrl;
     };
 
@@ -237,6 +225,12 @@ const WeatherForecast = () => {
         setShowOptions(!showOptions);
     };
 
+    const handleOptions = (option) =>{
+        if (option === 'sms'){
+            navigate('/sms');
+        }
+    }
+
     return (
         <>
         <nav className="news-navbar">
@@ -250,7 +244,7 @@ const WeatherForecast = () => {
         </button>
         {showOptions && (
         <ul className="options-list">
-          <li>Enable SMS Notifications</li>
+          <li onClick = {() => handleOptions('sms')}>Enable SMS Notifications</li>
           {/* Add more options as needed */}
         </ul>
         )}

@@ -7,6 +7,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.4.0",
+    "firebase": "^10.0.0",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^2.15.0",
     "openai": "^3.3.0",
@@ -20,7 +21,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "concurrently \"npm run start:Data-Aggregation\" \"npm run start:server\"",
+    "start:Data-Aggregation": "react-scripts start",
+    "start:server": "cd server && PORT=8000 node server.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -42,5 +45,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
   }
 }

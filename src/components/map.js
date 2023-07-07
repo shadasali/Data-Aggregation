@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import MapGL, {
-  useMap,
   Marker,
   NavigationControl,
   Source,
@@ -8,7 +7,6 @@ import MapGL, {
 } from "react-map-gl";
 import "./map.css";
 import "mapbox-gl/dist/mapbox-gl.css";
-import axios from "axios";
 
 function Map({ selectedCity, children }) {
   // Mapbox API access token
@@ -22,26 +20,6 @@ function Map({ selectedCity, children }) {
     latitude: selectedCity ? selectedCity.latitude : 0,
     longitude: selectedCity ? selectedCity.longitude : 0,
   });
-
-  useEffect(() => {
-    const fetchHistoricalPrecipitation = async () => {
-      try {
-        const currentDate = new Date();
-        const threeDaysAgo = new Date();
-        threeDaysAgo.setDate(currentDate.getDate() - 3);
-
-        const tilesUrl = `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${process.env.REACT_APP_OPEN_WEATHERMAP_API_KEY}`;
-
-        const response = await axios.get(tilesUrl);
-      } catch (error) {
-        console.error("Error fetching historical precipitation data:", error);
-      }
-    };
-
-    if (selectedCity) {
-      fetchHistoricalPrecipitation();
-    }
-  }, [selectedCity]);
 
   return (
   <>
@@ -78,9 +56,9 @@ function Map({ selectedCity, children }) {
             tileSize={256}
           >
             <Layer
-              id="historical-precipitation-layer"
+              id="precipitation-layer"
               type="raster"
-              source="historical-precipitation"
+              source="precipitation"
             />
           </Source>
         )}
