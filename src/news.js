@@ -18,22 +18,7 @@ const News = () => {
 
   const handleWeatherNav = async () => {
     try {
-      const response = await axios.get(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-          selectedCity.name
-        )}.json?access_token=${process.env.REACT_APP_MAPBOX_ACCESS_TOKEN}`
-      );
-
-      const { features } = response.data;
-      if (features.length > 0) {
-        const [longitude, latitude] = features[0].center;
-        selectedCity.latitude = latitude;
-        selectedCity.longitude = longitude;
-
-        navigate('/weather', { state: { selectedCity } });
-      } else {
-        console.log('City not found.');
-      }
+      navigate('/weather', { state: { selectedCity } });
     } catch (error) {
       console.error('Error fetching city coordinates:', error);
     }
@@ -65,7 +50,7 @@ const News = () => {
       });
 
       const data = await response.json();
-      console.log(data);
+
       const generatedDescription = data.choices[0].text.trim(); // Extract the generated news description
       setNewsDescription(prompt + generatedDescription); // Set the news description state
     } catch (error) {
@@ -74,12 +59,21 @@ const News = () => {
   }, [selectedCity]);
 
   useEffect(() => {
-    const fetchNews = async () => {  
-      const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(selectedCity.country)}&apiKey=${process.env.REACT_APP_NEWS_API_KEY}`;
-      const response = await axios.get(url);
-      setNews(response.data.articles);
-      generateNewsDescription(); // Call the generateNewsDescription function after fetching news articles
+    const fetchNews = async () => {
+      try{
+        const response = await axios.get(`http://localhost:8000/news/${selectedCity.country}`);
+        setNews(response.data.articles);
+        generateNewsDescription();
+      }catch(error){
+        console.error('Error generating articles', error);
+      }
     };
+    // const fetchNews = async () => {  
+    //   const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(selectedCity.country)}&apiKey=${process.env.REACT_APP_NEWS_API_KEY}`;
+    //   const response = await axios.get(url);
+    //   setNews(response.data.articles);
+    //   generateNewsDescription(); // Call the generateNewsDescription function after fetching news articles
+    // };
     fetchNews();
   }, [selectedCity, generateNewsDescription]);
 

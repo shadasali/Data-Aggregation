@@ -27,29 +27,11 @@ const WeatherForecast = () => {
 
     const handleNewsNav = async () => {
     try {
-        const response = await axios.get(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-            selectedCity.name
-            )}.json?access_token=${process.env.REACT_APP_MAPBOX_ACCESS_TOKEN}`
-        );
-
-
-        const { features } = response.data;
-        if (features.length > 0) {
-            const [longitude, latitude] = features[0].center;
-            selectedCity.latitude = latitude;
-            selectedCity.longitude = longitude;
-
-            navigate('/news', { state: { selectedCity } });
-        } else {
-            console.log('City not found.');
-        }
+        navigate('/news', { state: { selectedCity } });
     } catch (error) {
         console.error('Error fetching city coordinates:', error);
     }
-
     };
-
 
     const generateWeatherDescription = useCallback(async () => {
     if (selectedCity) {
@@ -105,13 +87,13 @@ const WeatherForecast = () => {
         const getPastDate = () => {
             const currentDate = new Date();
             const pastDate = new Date(currentDate);
-            pastDate.setDate(currentDate.getDate() - 1); // Subtract 1 day
+            pastDate.setDate(currentDate.getDate() - 2); // Subtract 1 day
             return pastDate.toISOString().split('T')[0]; // Format the date as "YYYY-MM-DD"
         };
         const getWeekAgoDate = () => {
             const currentDate = new Date();
             const weekAgoDate = new Date(currentDate);
-            weekAgoDate.setDate(currentDate.getDate() - 6); // Subtract 8 days to get a week ago
+            weekAgoDate.setDate(currentDate.getDate() - 7); // Subtract 8 days to get a week ago
             return weekAgoDate.toISOString().split('T')[0]; // Format the date as "YYYY-MM-DD"
         };
 

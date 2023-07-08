@@ -18,7 +18,7 @@ function MapPage() {
 function Navigation() {
   const { current: map } = useMap();
 
-  map.flyTo({ zoom: 10 });
+  map.flyTo({ zoom: 8 });
 
   return <div />;
 }
