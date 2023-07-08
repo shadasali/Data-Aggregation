@@ -29,31 +29,14 @@ const News = () => {
   };
 
   const generateNewsDescription = useCallback(async () => {
-    console.log(selectedCity);
-    const prompt = `Today in ${selectedCity.country}, the top 5 headlines are:\n`;
+    try{
+      const response = await axios.get(`http://localhost:8000/newsDescription/${selectedCity.country}`);
+      
+      const data = response.data;
 
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-
-    try {
-      const response = await fetch('https://api.openai.com/v1/engines/text-davinci-003/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          prompt: prompt,
-          max_tokens: 100,
-          temperature: 0.7,
-          n: 1,
-        }),
-      });
-
-      const data = await response.json();
-
-      const generatedDescription = data.choices[0].text.trim(); // Extract the generated news description
-      setNewsDescription(prompt + generatedDescription); // Set the news description state
-    } catch (error) {
+      setNewsDescription(data.description); // Set the weather description state
+      }
+    catch (error) {
       console.error('Error generating news description:', error);
     }
   }, [selectedCity]);
@@ -68,12 +51,6 @@ const News = () => {
         console.error('Error generating articles', error);
       }
     };
-    // const fetchNews = async () => {  
-    //   const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(selectedCity.country)}&apiKey=${process.env.REACT_APP_NEWS_API_KEY}`;
-    //   const response = await axios.get(url);
-    //   setNews(response.data.articles);
-    //   generateNewsDescription(); // Call the generateNewsDescription function after fetching news articles
-    // };
     fetchNews();
   }, [selectedCity, generateNewsDescription]);
 

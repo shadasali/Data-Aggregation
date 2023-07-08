@@ -34,36 +34,16 @@ const WeatherForecast = () => {
     };
 
     const generateWeatherDescription = useCallback(async () => {
+        
     if (selectedCity) {
-        let prompt = `Right now, the weather in ${selectedCity.name} is ___, with a temperature of:__.\n
-        The real feel is temperature:__.\n
-        The forecast for the rest of the week is: ___.\n
-        If you decide to go outside, you should wear: ___.\n
-        Based on the weather this week, check out these places: ___!`; // Modify the prompt as desired
+        try{
+        const response = await axios.get(`http://localhost:8000/weatherDescription/${selectedCity.name}`);
+        
+        const data = response.data;
 
-
-        const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-
-        try {
-            const response = await fetch('https://api.openai.com/v1/engines/text-davinci-003/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                },
-                body: JSON.stringify({
-                    prompt: prompt,
-                    max_tokens: 150,
-                    temperature: 0.7,
-                    n: 1,
-                }),
-            });
-
-
-            const data = await response.json();
-            const generatedDescription = data.choices[0].text.trim(); // Extract the generated weather description
-            setWeatherDescription(generatedDescription); // Set the weather description state
-        } catch (error) {
+        setWeatherDescription(data.description); // Set the weather description state
+        }
+        catch (error) {
             console.error('Error generating weather description:', error);
         }
 
@@ -107,17 +87,8 @@ const WeatherForecast = () => {
                 const response = await axios.get(`http://localhost:8000/historicalWeather/${selectedCity.latitude},${selectedCity.longitude}?startDate=${startDate}&endDate=${endDate}`);
 
                 const data = response.data;
-                console.log(data);
+
                 setHistoricalWeatherData(data);
-
-                // const apiKey = process.env.REACT_APP_WEATHERAPI_API_KEY;
-                // const apiUrl = `https://api.weatherapi.com/v1/history.json?key=${apiKey}&q=${selectedCity.latitude},${selectedCity.longitude}&dt=${getWeekAgoDate()}&end_dt=${getPastDate()}`;
-
-
-                // const response = await fetch(apiUrl);
-                // const data = await response.json();
-
-                // setHistoricalWeatherData(data);
 
             } catch (error) {
                 console.error('Error fetching historical weather data:', error);

@@ -12,11 +12,7 @@ const SearchPage = () => {
   useEffect(() => {
     const fetchCityOptions = async () => {
       try {
-        const response = await axios.get(
-          `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(
-            searchQuery
-          )}&limit=7&apiKey=${process.env.REACT_APP_GEOAPIFY_API_KEY}`
-        );
+        const response = await axios.get(`http://localhost:8000/autocomplete/${encodeURIComponent(searchQuery)}`);
 
         const places = response.data.features.map((feature) => ({
           id: feature.properties.osm_id,
@@ -50,12 +46,7 @@ const SearchPage = () => {
 
   const handleWeatherForecast = async () => {
     try {
-      const response = await axios.get(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-          searchQuery
-        )}.json?access_token=${process.env.REACT_APP_MAPBOX_ACCESS_TOKEN}`
-      );
-
+      const response = await axios.get(`http://localhost:8000/coordinates/${encodeURIComponent(searchQuery)}`);
 
       const { features } = response.data;
       if (features.length > 0) {
@@ -101,20 +92,13 @@ const SearchPage = () => {
 
   const handleNews = async () => {
     try {
-      const response = await axios.get(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-          searchQuery
-        )}.json?access_token=${process.env.REACT_APP_MAPBOX_ACCESS_TOKEN}`
-      );
+      const response = await axios.get(`http://localhost:8000/coordinates/${encodeURIComponent(searchQuery)}`);
 
       const { features } = response.data;
       if (features.length > 0) {
         const [longitude, latitude] = features[0].center;
         selectedCity.latitude = latitude;
         selectedCity.longitude = longitude;
-
-        console.log(selectedCity.latitude);
-        console.log(selectedCity.longitude);
 
         navigate('/news', { state: { selectedCity } });
       } else {
