@@ -84,10 +84,10 @@ const WeatherForecast = () => {
           };
 
 
-        const getPastDate = () => {
+        const getPrevDate = () => {
             const currentDate = new Date();
             const pastDate = new Date(currentDate);
-            pastDate.setDate(currentDate.getDate() - 2); // Subtract 1 day
+            pastDate.setDate(currentDate.getDate() - 1); // Subtract 1 day
             return pastDate.toISOString().split('T')[0]; // Format the date as "YYYY-MM-DD"
         };
         const getWeekAgoDate = () => {
@@ -101,14 +101,23 @@ const WeatherForecast = () => {
         const fetchHistoricalWeatherData = async () => {
             try {
                 // Fetch historical data
-                const apiKey = process.env.REACT_APP_WEATHERAPI_API_KEY;
-                const apiUrl = `https://api.weatherapi.com/v1/history.json?key=${apiKey}&q=${selectedCity.latitude},${selectedCity.longitude}&dt=${getWeekAgoDate()}&end_dt=${getPastDate()}`;
+                const startDate = getWeekAgoDate();
+                const endDate = getPrevDate();
 
+                const response = await axios.get(`http://localhost:8000/historicalWeather/${selectedCity.latitude},${selectedCity.longitude}?startDate=${startDate}&endDate=${endDate}`);
 
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-
+                const data = response.data;
+                console.log(data);
                 setHistoricalWeatherData(data);
+
+                // const apiKey = process.env.REACT_APP_WEATHERAPI_API_KEY;
+                // const apiUrl = `https://api.weatherapi.com/v1/history.json?key=${apiKey}&q=${selectedCity.latitude},${selectedCity.longitude}&dt=${getWeekAgoDate()}&end_dt=${getPastDate()}`;
+
+
+                // const response = await fetch(apiUrl);
+                // const data = await response.json();
+
+                // setHistoricalWeatherData(data);
 
             } catch (error) {
                 console.error('Error fetching historical weather data:', error);
@@ -131,17 +140,47 @@ const WeatherForecast = () => {
         if (dayOfWeekIndex > 6)
             dayOfWeekIndex = 0
 
-
-
         return daysOfWeek[dayOfWeekIndex];
     };
 
 
     const formatDate = (dateString) => {
         const currentDate = new Date(dateString);
-        const month = currentDate.getMonth() + 1; // Adding 1 because months are zero-based
-        const day = currentDate.getDate() + 1;
+        
+        var month = currentDate.getMonth() + 1; // Adding 1 because months are zero-based
         const year = currentDate.getFullYear();
+        var maxDays;
+
+        if (month <= 7){
+            if (month === 2 && year % 4 === 0){
+                maxDays = 29;
+            }
+            else if(month === 2 && year % 4 > 0){
+                maxDays = 28;
+            }
+            else if (month % 2 === 1){
+                maxDays = 31;
+            }
+            else{
+                maxDays = 30;
+            }
+        }
+        else{
+            if (month % 2 === 0){
+                maxDays = 31;
+            }
+            else{
+                maxDays = 30;
+            }
+        }
+
+        var day = currentDate.getDate() + 1;
+        
+        if (day > maxDays){
+            day = 1;
+            month += 1;
+        }
+
         return `${month}/${day}/${year}`;
     };
 
@@ -260,7 +299,6 @@ const WeatherForecast = () => {
         <p>Chance of Rain: {day.day.daily_chance_of_rain}% </p>
         <p>Total Precipitation: {day.day.totalprecip_in} in.</p>
         <p>UV Index: {day.day.uv} ({getUVDescription(day.day.uv)})</p>
-        {/* Display additional forecast data as needed */}
         </div>
         ))}
         </div>
@@ -287,7 +325,6 @@ const WeatherForecast = () => {
         <p>Max Wind Speed: {day.day.maxwind_kph} km/h </p>
         <p>Total Precipitation: {day.day.totalprecip_in} in.</p>
         <p>UV Index: {day.day.uv} ({getUVDescription(day.day.uv)})</p>
-        {/* Display additional historical data as needed */}
         </div>
         ))}
         </div>

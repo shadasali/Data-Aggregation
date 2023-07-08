@@ -74,6 +74,43 @@ app.get('/weather/:city', async (req, res) => {
   }
   });
 
+  app.get('/historicalWeather/:latitude,:longitude', async (req, res) => {
+    const {startDate, endDate} = req.query;
+
+    const { latitude, longitude } = req.params;
+    const documentId = `${latitude},${longitude}`; 
+
+
+    const historicalweatherDataRef = firestore.collection('historicalWeatherData').doc(documentId);
+    const historicalWeatherDataSnapshot = await historicalweatherDataRef.get();
+
+  if (historicalWeatherDataSnapshot.exists) {
+    // If the weather data exists, fetch it from Firestore and return as response
+
+    const historicalWeatherData = historicalWeatherDataSnapshot.data();
+    res.json(historicalWeatherData);
+  } else {
+    // If the weather data doesn't exist, make API call to fetch it
+
+    const apiKey = process.env.WEATHERAPI_API_KEY;
+    const apiUrl = `https://api.weatherapi.com/v1/history.json?key=${apiKey}&q=${latitude},${longitude}&dt=${startDate}&end_dt=${endDate}`;
+
+    try {
+      const response = await axios.get(apiUrl);
+      const data = response.data;
+
+      // Store the fetched weather data in Firestore
+      await historicalweatherDataRef.set(data);
+
+      // Return the fetched data as the response
+      res.json(data);
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+      res.status(500).json({ error: 'Failed to fetch weather data' });
+    }
+  }
+  });
+
   app.listen(8000, () => {
     console.log('Server is listening on port 8000');
   });
