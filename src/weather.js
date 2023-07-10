@@ -37,7 +37,11 @@ const WeatherForecast = () => {
         
     if (selectedCity) {
         try{
-        const response = await axios.get(`http://localhost:8000/weatherDescription/${selectedCity.name}`);
+        //generates new description everyday
+        const today = new Date();
+        const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+
+        const response = await axios.get(`http://localhost:8000/weatherDescription/${selectedCity.name}/${formattedDate}`);
         
         const data = response.data;
 
@@ -54,7 +58,11 @@ const WeatherForecast = () => {
     useEffect(() => {
         const fetchWeatherData = async () => {
             try {
-              const response = await axios.get(`http://localhost:8000/weather/${selectedCity.name}`);
+                //gets the forecast everyday
+              const today = new Date();
+              const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+
+              const response = await axios.get(`http://localhost:8000/weather/${selectedCity.name}/${formattedDate}`);
               const data = response.data;
               setWeatherData(data);
               generateWeatherDescription();
@@ -73,7 +81,7 @@ const WeatherForecast = () => {
         const getWeekAgoDate = () => {
             const currentDate = new Date();
             const weekAgoDate = new Date(currentDate);
-            weekAgoDate.setDate(currentDate.getDate() - 7); // Subtract 8 days to get a week ago
+            weekAgoDate.setDate(currentDate.getDate() - 7); // Subtract 7 days to get a week ago
             return weekAgoDate.toISOString().split('T')[0]; // Format the date as "YYYY-MM-DD"
         };
 
@@ -83,8 +91,12 @@ const WeatherForecast = () => {
                 // Fetch historical data
                 const startDate = getWeekAgoDate();
                 const endDate = getPrevDate();
+                
+                //gets the historical forecast everyday
+                const today = new Date();
+                const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
 
-                const response = await axios.get(`http://localhost:8000/historicalWeather/${selectedCity.latitude},${selectedCity.longitude}?startDate=${startDate}&endDate=${endDate}`);
+                const response = await axios.get(`http://localhost:8000/historicalWeather/${selectedCity.latitude},${selectedCity.longitude}/${formattedDate}?startDate=${startDate}&endDate=${endDate}`);
 
                 const data = response.data;
 
@@ -119,6 +131,7 @@ const WeatherForecast = () => {
         const currentDate = new Date(dateString);
         
         var month = currentDate.getMonth() + 1; // Adding 1 because months are zero-based
+
         const year = currentDate.getFullYear();
         var maxDays;
 
@@ -279,7 +292,7 @@ const WeatherForecast = () => {
         <h2 className="centered-title" id='#historical-title'>Historical Weather Data</h2>
         {historicalWeatherData && historicalWeatherData.forecast && (
         <div className='forecast-container'>
-        {historicalWeatherData.forecast.forecastday.map((day, index) => (
+        {historicalWeatherData.forecast.forecastday.slice().reverse().map((day, index) => (
         <div key={formatDayOfWeek(day.date)}
         className= 'forecast-background'>
         <h3> {formatDayOfWeek(day.date)} {formatDate(day.date)} </h3>

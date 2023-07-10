@@ -17,10 +17,10 @@ const firestore = admin.firestore();
 
 app.use(cors());
 
-app.get('/news/:country', async (req, res) => {
-  const {country} = req.params;
+app.get('/news/:country/:date', async (req, res) => {
+  const {country, date} = req.params;
 
-  const newsDataRef = firestore.collection('newsData').doc(country);
+  const newsDataRef = firestore.collection('newsData').doc(`${country}-${date}`);
   const newsDataSnapshot = await newsDataRef.get();
 
   if (newsDataSnapshot.exists){
@@ -32,7 +32,7 @@ app.get('/news/:country', async (req, res) => {
     try{
       const response = await axios.get(apiURL);
       const data = response.data;
-
+      
       await newsDataRef.set(data);
 
       res.json(data);
@@ -43,10 +43,10 @@ app.get('/news/:country', async (req, res) => {
   }
 });
 
-app.get('/weather/:city', async (req, res) => {
-    const { city } = req.params;
+app.get('/weather/:city/:date', async (req, res) => {
+    const { city, date } = req.params;
     
-    const weatherDataRef = firestore.collection('weatherData').doc(city);
+    const weatherDataRef = firestore.collection('weatherData').doc(`${city} - ${date}`);
     const weatherDataSnapshot = await weatherDataRef.get();
 
   if (weatherDataSnapshot.exists) {
@@ -74,13 +74,13 @@ app.get('/weather/:city', async (req, res) => {
   }
   });
 
-  app.get('/historicalWeather/:latitude,:longitude', async (req, res) => {
+  app.get('/historicalWeather/:latitude,:longitude/:date', async (req, res) => {
     const {startDate, endDate} = req.query;
 
-    const { latitude, longitude } = req.params;
+    const { latitude, longitude, date } = req.params;
     const documentId = `${latitude},${longitude}`; 
 
-    const historicalweatherDataRef = firestore.collection('historicalWeatherData').doc(documentId);
+    const historicalweatherDataRef = firestore.collection('historicalWeatherData').doc(`${documentId} - ${date}`);
     const historicalWeatherDataSnapshot = await historicalweatherDataRef.get();
 
   if (historicalWeatherDataSnapshot.exists) {
@@ -110,10 +110,10 @@ app.get('/weather/:city', async (req, res) => {
   }
   });
 
-  app.get('/weatherDescription/:city', async (req, res) =>{
-    const {city} = req.params;
+  app.get('/weatherDescription/:city/:date', async (req, res) =>{
+    const {city, date} = req.params;
 
-    const weatherDescriptionRef = firestore.collection('weatherDescriptions').doc(city);
+    const weatherDescriptionRef = firestore.collection('weatherDescriptions').doc(`${city}-${date}`);
     const weatherDescriptionsSnapshot = await weatherDescriptionRef.get();
 
   if (weatherDescriptionsSnapshot.exists) {
@@ -160,10 +160,10 @@ app.get('/weather/:city', async (req, res) => {
   
   });
 
-  app.get('/newsDescription/:country', async (req, res) =>{
-    const {country} = req.params;
+  app.get('/newsDescription/:country/:date', async (req, res) =>{
+    const {country, date} = req.params;
 
-    const newsDescriptionRef = firestore.collection('newsDescriptions').doc(country);
+    const newsDescriptionRef = firestore.collection('newsDescriptions').doc(`${country}-${date}`);
     const newsDescriptionsSnapshot = await newsDescriptionRef.get();
 
   if (newsDescriptionsSnapshot.exists) {
@@ -264,6 +264,43 @@ app.get('/weather/:city', async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch suggestions' });
     }
   }
+  })
+
+  app.post('/userPreferences/:currentLocation', async (req, res) => {
+    try{
+      const{currentLocation} = req.params;
+
+      const { phoneNumber, hotTemperatureValue, coldTemperatureValue, AQIValue} = req.query;
+
+      const userPreferencesDoc = firestore.collection('userSMSPreferences').doc(phoneNumber);
+      const userPreferencesSnapshot = await userPreferencesDoc.get();
+
+      if (userPreferencesSnapshot.exists){
+        const existingPreferences = userPreferencesSnapshot.data();
+
+        if (existingPreferences.currentLocation === currentLocation 
+          && existingPreferences.hotTemperatureValue === hotTemperatureValue 
+          && existingPreferences.coldTemperatureValue === coldTemperatureValue
+          && existingPreferences.AQIValue === AQIValue){
+            return res.json({message: 'Your preferences are already stored'});
+          }
+      }
+
+      const userData = {
+        currentLocation,
+        phoneNumber, 
+        hotTemperatureValue,
+        coldTemperatureValue, 
+        AQIValue,
+      }
+
+      await userPreferencesDoc.set(userData);
+
+      res.json({message: 'User preferences stored successfully'});
+    } catch(error){
+      console.error('Error storing user preferences', error);
+      res.status(500).json({error: 'Failed to fetch suggestions'});
+    }
   })
 
   app.listen(8000, () => {

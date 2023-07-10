@@ -30,7 +30,11 @@ const News = () => {
 
   const generateNewsDescription = useCallback(async () => {
     try{
-      const response = await axios.get(`http://localhost:8000/newsDescription/${selectedCity.country}`);
+      //Generates new description everyday
+      const today = new Date();
+      const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+
+      const response = await axios.get(`http://localhost:8000/newsDescription/${selectedCity.country}/${formattedDate}`);
       
       const data = response.data;
 
@@ -44,7 +48,12 @@ const News = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try{
-        const response = await axios.get(`http://localhost:8000/news/${selectedCity.country}`);
+
+        const today = new Date();
+        const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+
+        const response = await axios.get(`http://localhost:8000/news/${selectedCity.country}/${formattedDate}`);
+        
         setNews(response.data.articles);
         generateNewsDescription();
       }catch(error){
@@ -96,7 +105,10 @@ const News = () => {
             <li key={article.url} className="news-news-item">
               <div className="news-article-container">
                 <a className='news-a' href={article.url} target="_blank" rel="noopener noreferrer">
-                  <img src={article.urlToImage} alt={article.title} className="news-news-image"/>
+                  <img src={article.urlToImage} 
+                  alt={article.title} 
+                  className="news-news-image"
+                  onError={(e) => { e.target.style.display = 'none' }} />
                 </a>
                 <div className="news-news-content">
                   <a className='news-a' href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a>
