@@ -13,7 +13,7 @@ const News = () => {
   const navigate = useNavigate();
 
   const handleHomeNav = () => {
-    navigate('/');
+    navigate('/home');
   };
 
   const handleWeatherNav = async () => {

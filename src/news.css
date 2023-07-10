@@ -58,7 +58,7 @@
 
 .news-news-item {
   break-inside: avoid-column; /* Prevents list items from breaking across columns */
-  width: 300px;
+  width: 330px;
   border: 1px solid #ccc;
   margin-top: 50px;
   padding: 15px;
@@ -67,12 +67,11 @@
 }
 
 .news-news-image {
-  position: relative;
+  text-align: relative;
   width: 300px;
   height: 225;
   object-fit: cover;
 }
-
 
 .news-p {
   font-size: 1.2rem;

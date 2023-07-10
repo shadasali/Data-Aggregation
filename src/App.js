@@ -5,13 +5,14 @@ import MapPage from './map';
 import News from './news';
 import WeatherForecast from './weather';
 import SMSNotifications from './sms';
-//import 'bootstrap/dist/css/bootstrap.min.css';
+import Authentication from './Authentication';
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route exact path="/" element={<SearchPage />} />
+        <Route exact path="/" element={<Authentication/>} />
+        <Route path="/home" element={<SearchPage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/news" element={<News />} />
         <Route path="/weather" element = {<WeatherForecast />} />

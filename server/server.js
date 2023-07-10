@@ -284,6 +284,22 @@ app.get('/weather/:city/:date', async (req, res) => {
           && existingPreferences.AQIValue === AQIValue){
             return res.json({message: 'Your preferences are already stored'});
           }
+
+          if (existingPreferences.currentLocation !== currentLocation){
+            existingPreferences.currentLocation = currentLocation;
+          }  
+        if (existingPreferences.phoneNumber !== phoneNumber){
+          existingPreferences.phoneNumber = phoneNumber;
+        }
+        if (existingPreferences.hotTemperatureValue !== hotTemperatureValue){
+          existingPreferences.hotTemperatureValue = hotTemperatureValue;
+        }
+        if (existingPreferences.coldTemperatureValue !== coldTemperatureValue){
+          existingPreferences.coldTemperatureValue = coldTemperatureValue;
+        }
+        if (existingPreferences.AQIValue !== AQIValue){
+          existingPreferences.AQIValue = AQIValue;
+        }
       }
 
       const userData = {

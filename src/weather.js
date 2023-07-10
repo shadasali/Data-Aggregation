@@ -16,7 +16,7 @@ const WeatherForecast = () => {
 
 
     const handleHomeNav = () => {
-        navigate('/');
+        navigate('/home');
     };
 
 
