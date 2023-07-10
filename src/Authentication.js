@@ -1,14 +1,24 @@
-import React from 'react';
+import React, {useState} from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './Authenticate.css'
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 function Authentication () {
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(true);
+    
     const handleUserName = () =>{
 
     }
-    const handlePassword = () =>{
 
-    }
+    const handlePasswordChange = (e) => {
+        setPassword(e.target.value);
+    };
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+    
     const handleAuthentication = () =>{
 
     }
@@ -27,12 +37,19 @@ function Authentication () {
                 <div className="authentication-container">
                 <div className='authentication-section'>
                     <label htmlFor='Username' className='userName'>
-                        <input type = "text" placeholder="Username" onChange={handleUserName} style={{width:'300px'}}></input>
+                        <input type = "text" placeholder="Username" onChange={handleUserName} style={{width:'300px', paddingRight: '2.5rem'}}></input>
                     </label>
                 </div>
                 <div className='authentication-section'>
                     <label htmlFor='Password' className='passWord'>
-                        <input type="text" placeholder="Password" onChange={handlePassword} style={{width:'300px'}}></input>
+                    <div className="password-input-container">
+                        <input type={showPassword ? 'password' : 'text'} placeholder="Password" value = {password} onChange={handlePasswordChange} style={{width:'300px'}}></input>
+                        {showPassword ? (
+                            <FaEyeSlash className="password-icon" onClick={togglePasswordVisibility} />
+                            ) : (
+                            <FaEye className="password-icon" onClick={togglePasswordVisibility} />
+                        )}
+                    </div>
                     </label>
                 </div>
                 </div>

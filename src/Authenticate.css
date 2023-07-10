@@ -39,6 +39,23 @@
     margin-bottom: 1rem;
   }
 
+  .password-input-container {
+    position: relative;
+  }
+  
+  .password-input {
+    width: 300px;
+    padding-right: 2.5rem;
+  }
+  
+  .password-icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+
   .line-section {
     display: flex;
     align-items: center;
