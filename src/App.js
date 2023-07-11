@@ -6,12 +6,14 @@ import News from './news';
 import WeatherForecast from './weather';
 import SMSNotifications from './sms';
 import Authentication from './Authentication';
+import NewUser from './newUser';
 
 const App = () => {
   return (
     <Router>
       <Routes>
         <Route exact path="/" element={<Authentication/>} />
+        <Route path="/newUser" element={<NewUser/>} />
         <Route path="/home" element={<SearchPage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/news" element={<News />} />
