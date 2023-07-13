@@ -4,6 +4,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './newUser.css'
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import app from './firebase';
+import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 function NewUser() {
     const [userName, setUserName] = useState('');
@@ -65,7 +67,9 @@ function NewUser() {
 
         if (isValid){
             try{
-                const response = await axios.post(`http://localhost:8000/createUser?email=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}`);
+                const fullName = `${firstName} ${lastName}`;
+
+                const response = await axios.post(`http://localhost:8000/createUser?email=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}&fullname=${encodeURIComponent(fullName)}`);
   
                 if (response.data.success === false){
                     setInvalidEmail(true);
@@ -82,7 +86,31 @@ function NewUser() {
             setHasErrors(true);
             return;
         }
-    }
+    };
+
+    const handleGoogleAuth = async (response) => {
+        try {
+          const { tokenId } = response;
+        
+          const provider = new GoogleAuthProvider();
+
+          provider.setCustomParameters({
+            id_token: tokenId
+          });
+        
+          const auth = getAuth(app);
+          const result = await signInWithPopup(auth, provider);
+
+          const { user, credential } = result;
+        
+          console.log('Authenticated user:', user);
+          console.log('Google credential:', credential);
+        
+          navigate('/home');
+        } catch (error) {
+          console.error('Error authenticating with Firebase:', error);
+        }
+    };
 
     const errorCount = Object.keys(validationErrors).length;
     const heightIncrease = errorCount * 18;
@@ -149,16 +177,10 @@ function NewUser() {
             </div>
             
             <div className="google-sign-in d-flex justify-content-center">
-                <a href="/signin-google" className="google-button" style={{ width: '300px' }}>
+                <button className="google-button" type="button" onClick={handleGoogleAuth} style={{ width: '300px' }}>
                     <span className="google-icon"><i className="google-icon"></i></span>
                     <span className="google-text">Continue with Google</span>
-                </a>
-            </div>
-            <div className="facebook-sign-in d-flex justify-content-center">
-                <a href="/signin-facebook" className="facebook-button" style={{ width: '300px' }}>
-                    <span className="facebook-icon"><i className="facebook-icon"></i></span>
-                    <span className="facebook-text"> Continue with Facebook</span>
-                </a>
+                </button>
             </div>
 
             </div>

@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './Authenticate.css';
 import axios from 'axios';
+import app from './firebase';
+import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 function Authentication () {
     const [password, setPassword] = useState('');
@@ -57,7 +59,6 @@ function Authentication () {
                 if (response.data.success){
                     navigate('/home');
                 }else{
-                    console.log(response.data.error);
                     if(response.data.error === 'INVALID_EMAIL'){
                         setInvalidUserName(true);
                     }
@@ -75,6 +76,31 @@ function Authentication () {
             return;
         }
     }
+
+    const handleGoogleAuth = async (response) => {
+        try {
+          const { tokenId } = response;
+        
+          const provider = new GoogleAuthProvider();
+
+          provider.setCustomParameters({
+            id_token: tokenId
+          });
+        
+          const auth = getAuth(app);
+          const result = await signInWithPopup(auth, provider);
+
+          const { user, credential } = result;
+        
+          console.log('Authenticated user:', user);
+          console.log('Google credential:', credential);
+        
+          navigate('/home');
+        } catch (error) {
+          console.error('Error authenticating with Firebase:', error);
+        }
+    };      
+
     const errorCount = Object.keys(validationErrors).length;
     const heightIncrease = errorCount * 18;
 
@@ -126,11 +152,11 @@ function Authentication () {
                 <br></br>
 
                 <div className="form-check">
-                <input className="form-check-input" style={{marginLeft: '20px'}} type="checkbox" checked="checked" id="remember-checkbox" />
-                <label className="form-check-label" style={{marginLeft: '10px'}} htmlFor="remember-checkbox">
+                <input className="form-check-input" style={{marginLeft: '15px'}} type="checkbox" id="remember-checkbox" />
+                <label className="form-check-label" style={{marginLeft: '7.5px'}} htmlFor="remember-checkbox">
                 Remember me
                 </label>
-                <a href="/forgotUsername" className="forgot-link" style={{marginLeft: '90px', textDecoration: 'none'}}>Forgot Password?</a>
+                <a href="/forgotUsername" className="forgot-link" style={{marginLeft: '80px', textDecoration: 'none'}}>Forgot Password?</a>
                 </div>
 
                 <div className="line-section">
@@ -141,16 +167,17 @@ function Authentication () {
 
                 
                 <div className="google-sign-in d-flex justify-content-center">
-                <a href="/signin-google" className="google-button" style={{ width: '300px' }}>
-                    <span className="google-icon"><i className="google-icon"></i></span>
-                    <span className="google-text">Sign in with Google</span>
-                </a>
-                </div>
-                <div className="facebook-sign-in d-flex justify-content-center">
-                <a href="/signin-facebook" className="facebook-button" style={{ width: '300px' }}>
-                    <span className="facebook-icon"><i className="facebook-icon"></i></span>
-                    <span className="facebook-text">Sign in with Facebook</span>
-                </a>
+                <button
+                    className="google-button"
+                    type="button"
+                    onClick={handleGoogleAuth}
+                    style={{ width: '300px' }}
+                >
+                    <span className="google-icon">
+                    <i className="google-icon"></i>
+                    </span>
+                    <span className="google-text1">Sign in with Google</span>
+                </button>
                 </div>
             </div>
         </div>

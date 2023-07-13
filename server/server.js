@@ -9,6 +9,7 @@ require('dotenv').config();
 const admin = require('firebase-admin');
 
 const serviceAccount = require('./firebase_private_key.json');
+const googleClientId = require('./client_secret.json').web.client_id;
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -21,7 +22,7 @@ app.use(cors());
 app.post('/createUser', async (req, res) => {
   try {
     // Retrieve email and password from the request body
-    const { email, password } = req.query;
+    const { email, password, fullName } = req.query;
     
     const isValidEmail = validator.isEmail(email);
 
@@ -31,10 +32,11 @@ app.post('/createUser', async (req, res) => {
       if (response.data.data.result === 'deliverable'){
         // Create user account in Firebase Authentication
         const user = await admin.auth().createUser({
-          email,
-          password,
+          email: email,
+          password: password,
+          displayName: fullName,
         });
-
+        
         // Handle success (e.g., send success response)
         res.status(200).json({success:true, message: 'User created successfully' });
       }
@@ -72,7 +74,6 @@ app.post('/verifyUser', async (req, res) => {
     res.json({ success: false, error: errorMessage });
   }
 });
-
 
 app.get('/news/:country/:date', async (req, res) => {
   const {country, date} = req.params;
