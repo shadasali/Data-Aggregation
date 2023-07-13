@@ -2,6 +2,7 @@ const axios = require('axios');
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const validator = require('validator');
 
 require('dotenv').config();
 
@@ -16,6 +17,62 @@ admin.initializeApp({
 const firestore = admin.firestore();
 
 app.use(cors());
+
+app.post('/createUser', async (req, res) => {
+  try {
+    // Retrieve email and password from the request body
+    const { email, password } = req.query;
+    
+    const isValidEmail = validator.isEmail(email);
+
+    if (isValidEmail){
+      const response = await axios.get(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${process.env.HUNTERIO_API_KEY}`);
+
+      if (response.data.data.result === 'deliverable'){
+        // Create user account in Firebase Authentication
+        const user = await admin.auth().createUser({
+          email,
+          password,
+        });
+
+        // Handle success (e.g., send success response)
+        res.status(200).json({success:true, message: 'User created successfully' });
+      }
+      else{
+        return res.json({success:false, message: 'Invalid Email'});
+      }
+    }
+    else{
+      return res.json({ success: false, error: 'Invalid email address format' });
+    }
+  } catch (error) {
+    // Handle error (e.g., send error response)
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+app.post('/verifyUser', async (req, res) => {
+  try {
+    const { email, password } = req.query;
+
+    // Sign in the user using Firebase Authentication
+    const response = await axios.post(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.FIREBASE_API_KEY}`, {
+      email: email,
+      password: password,
+      returnSecureToken: true
+    });
+
+    const { idToken } = response.data;
+    
+    // User authentication successful
+    res.json({ success: true, idToken: idToken });
+  } catch (error) {
+    const errorMessage = error.response.data.error.message;
+    res.json({ success: false, error: errorMessage });
+  }
+});
+
 
 app.get('/news/:country/:date', async (req, res) => {
   const {country, date} = req.params;
@@ -74,13 +131,12 @@ app.get('/weather/:city/:date', async (req, res) => {
   }
   });
 
-  app.get('/historicalWeather/:latitude,:longitude/:date', async (req, res) => {
+  app.get('/historicalWeather/:city/:latitude,:longitude/:date', async (req, res) => {
     const {startDate, endDate} = req.query;
 
-    const { latitude, longitude, date } = req.params;
-    const documentId = `${latitude},${longitude}`; 
+    const { city, latitude, longitude, date } = req.params; 
 
-    const historicalweatherDataRef = firestore.collection('historicalWeatherData').doc(`${documentId} - ${date}`);
+    const historicalweatherDataRef = firestore.collection('historicalWeatherData').doc(`${city} - ${date}`);
     const historicalWeatherDataSnapshot = await historicalweatherDataRef.get();
 
   if (historicalWeatherDataSnapshot.exists) {
@@ -108,6 +164,31 @@ app.get('/weather/:city/:date', async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch weather data' });
     }
   }
+  });
+
+  app.get('/localDate/:city/:latitude/:longitude/:date', async (req,res) =>{
+    const {city, latitude,longitude, date} = req.params;
+ 
+    const locationDataRef=firestore.collection('localDates').doc(`${city}-${date}`);
+    const locationSnapshot = await locationDataRef.get();
+
+    if (locationSnapshot.exists){
+      const locationData = locationSnapshot.data();
+      res.json(locationData);
+    } else{
+      try{
+        const username = process.env.GEONAME_USERNAME;
+        const response = await axios.get(`http://api.geonames.org/timezoneJSON?lat=${latitude}&lng=${longitude}&username=${username}`);
+        const data = response.data;
+
+        await locationDataRef.set(data);
+
+        res.json(data);
+      }catch(error){
+        console.error('Error fetching location data: ', error);
+        res.status(500).json({error:'Failed to fetch weather data'});
+      }
+    }
   });
 
   app.get('/weatherDescription/:city/:date', async (req, res) =>{
@@ -226,7 +307,7 @@ app.get('/weather/:city/:date', async (req, res) => {
       );
       
       const data = response.data;
-      console.log("data: ", data);
+
       await searchQueryDataRef.set(data);
 
       res.json(data);
@@ -318,6 +399,8 @@ app.get('/weather/:city/:date', async (req, res) => {
       res.status(500).json({error: 'Failed to fetch suggestions'});
     }
   })
+
+
 
   app.listen(8000, () => {
     console.log('Server is listening on port 8000');

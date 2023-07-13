@@ -14,7 +14,7 @@
 
 .NewUser {
     width: 450px; 
-    height: 540px;
+    height: 610px;
     padding: 1rem;
     position: fixed;
     top: 50%;
@@ -22,6 +22,14 @@
     transform: translate(-50%, -50%);
     background-color:aliceblue;
     box-shadow: -5px 5px lavender;
+    border: 1px solid #ccc;
+    --height-increase: 0px;
+    height: calc(610px + var(--height-increase));
+    transition: height 0.7s;
+  }
+
+  .NewUser.error {
+    --height-increase: 18px; 
   }
 
   .signIn-section {
@@ -46,6 +54,16 @@
     align-items: center;
     margin-bottom: 1rem;
   }
+
+  .input-error {
+    border: 1px solid red;
+  }
+  
+  .error-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 4px;
+  }  
 
   .password-input-container {
     position: relative;

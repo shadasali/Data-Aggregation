@@ -23,6 +23,14 @@
     transform: translate(-50%, -50%);
     background-color:aliceblue;
     box-shadow: -5px 5px lavender;
+    border: 1px solid #ccc;
+    --height-increase: 0px;
+    height: calc(540px + var(--height-increase));
+    transition: height 0.7s;
+  }
+
+  .Authenticate.error {
+    --height-increase: 18px; 
   }
   
   .signUp-section {
@@ -53,11 +61,16 @@
   }
   
   .password-icon {
-    position: absolute;
+    position:absolute;
     top: 50%;
     right: 10px;
     transform: translateY(-50%);
     cursor: pointer;
+    transition: top 0.7s; 
+  }
+
+  .password-icon.error{
+    top: calc(50% - 10px);
   }
 
   .line-section {

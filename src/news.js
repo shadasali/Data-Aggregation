@@ -31,8 +31,8 @@ const News = () => {
   const generateNewsDescription = useCallback(async () => {
     try{
       //Generates new description everyday
-      const today = new Date();
-      const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+      const localDate = new Date(selectedCity.localDate);
+      const formattedDate = `${localDate.getFullYear()}-${localDate.getMonth() + 1}-${localDate.getDate()}`;
 
       const response = await axios.get(`http://localhost:8000/newsDescription/${selectedCity.country}/${formattedDate}`);
       

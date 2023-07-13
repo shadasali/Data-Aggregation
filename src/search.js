@@ -47,13 +47,22 @@ const SearchPage = () => {
   const handleWeatherForecast = async () => {
     try {
       const response = await axios.get(`http://localhost:8000/coordinates/${encodeURIComponent(searchQuery)}`);
+      
+      const today = new Date();
+      const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
 
       const { features } = response.data;
       if (features.length > 0) {
         const [longitude, latitude] = features[0].center;
+
+        const dateResponse = await axios.get(`http://localhost:8000/localDate/${selectedCity.name}/${latitude}/${longitude}/${formattedDate}`);
+
+        const localDate = dateResponse.data.time;
+
         selectedCity.latitude = latitude;
         selectedCity.longitude = longitude;
-
+        selectedCity.localDate = localDate;
+        
         navigate('/weather', { state: { selectedCity } });
       } else {
         console.log('City not found.');

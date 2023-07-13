@@ -38,8 +38,8 @@ const WeatherForecast = () => {
     if (selectedCity) {
         try{
         //generates new description everyday
-        const today = new Date();
-        const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+        const localDate = new Date(selectedCity.localDate);
+        const formattedDate = `${localDate.getFullYear()}-${localDate.getMonth() + 1}-${localDate.getDate()}`;
 
         const response = await axios.get(`http://localhost:8000/weatherDescription/${selectedCity.name}/${formattedDate}`);
         
@@ -64,6 +64,7 @@ const WeatherForecast = () => {
 
               const response = await axios.get(`http://localhost:8000/weather/${selectedCity.name}/${formattedDate}`);
               const data = response.data;
+              
               setWeatherData(data);
               generateWeatherDescription();
             } catch (error) {
@@ -72,31 +73,43 @@ const WeatherForecast = () => {
           };
 
 
-        const getPrevDate = () => {
-            const currentDate = new Date();
+        const getPrevDate = (date) => {
+            const currentDate = new Date(date);
             const pastDate = new Date(currentDate);
+
             pastDate.setDate(currentDate.getDate() - 1); // Subtract 1 day
-            return pastDate.toISOString().split('T')[0]; // Format the date as "YYYY-MM-DD"
+            
+            const year = pastDate.getFullYear();
+            const month = String(pastDate.getMonth() + 1).padStart(2, '0'); // Add leading zero if necessary
+            const day = String(pastDate.getDate()).padStart(2, '0'); // Add leading zero if necessary
+
+
+            return `${year}-${month}-${day}`; // Format the date as "YYYY-MM-DD"
         };
-        const getWeekAgoDate = () => {
-            const currentDate = new Date();
+        const getWeekAgoDate = (date) => {
+            const currentDate = new Date(date);
             const weekAgoDate = new Date(currentDate);
             weekAgoDate.setDate(currentDate.getDate() - 7); // Subtract 7 days to get a week ago
-            return weekAgoDate.toISOString().split('T')[0]; // Format the date as "YYYY-MM-DD"
+
+            const year = weekAgoDate.getFullYear();
+            const month = String(weekAgoDate.getMonth() + 1).padStart(2, '0'); // Add leading zero if necessary
+            const day = String(weekAgoDate.getDate()).padStart(2, '0'); // Add leading zero if necessary
+
+            return `${year}-${month}-${day}`; // Format the date as "YYYY-MM-DD"
         };
 
 
         const fetchHistoricalWeatherData = async () => {
             try {
                 // Fetch historical data
-                const startDate = getWeekAgoDate();
-                const endDate = getPrevDate();
+                const startDate = getWeekAgoDate(selectedCity.localDate);
+                const endDate = getPrevDate(selectedCity.localDate);
                 
                 //gets the historical forecast everyday
                 const today = new Date();
-                const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-
-                const response = await axios.get(`http://localhost:8000/historicalWeather/${selectedCity.latitude},${selectedCity.longitude}/${formattedDate}?startDate=${startDate}&endDate=${endDate}`);
+                const formattedDate = `${today.getMonth() + 1}-${today.getDate()}-${today.getFullYear()}`;
+                
+                const response = await axios.get(`http://localhost:8000/historicalWeather/${selectedCity.name}/${selectedCity.latitude},${selectedCity.longitude}/${formattedDate}?startDate=${startDate}&endDate=${endDate}`);
 
                 const data = response.data;
 
