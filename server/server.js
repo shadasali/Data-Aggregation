@@ -9,7 +9,6 @@ require('dotenv').config();
 const admin = require('firebase-admin');
 
 const serviceAccount = require('./firebase_private_key.json');
-const googleClientId = require('./client_secret.json').web.client_id;
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)

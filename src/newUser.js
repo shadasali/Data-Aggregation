@@ -5,7 +5,7 @@ import './newUser.css'
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import app from './firebase';
-import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, signInWithPopup, GoogleAuthProvider} from 'firebase/auth';
 
 function NewUser() {
     const [userName, setUserName] = useState('');
@@ -110,10 +110,10 @@ function NewUser() {
         } catch (error) {
           console.error('Error authenticating with Firebase:', error);
         }
-    };
+    };      
 
     const errorCount = Object.keys(validationErrors).length;
-    const heightIncrease = errorCount * 18;
+    const heightIncrease = errorCount * 20;
 
     return(
         <div className="background">
@@ -177,7 +177,7 @@ function NewUser() {
             </div>
             
             <div className="google-sign-in d-flex justify-content-center">
-                <button className="google-button" type="button" onClick={handleGoogleAuth} style={{ width: '300px' }}>
+                <button className="google-button" type="button" onClick={handleGoogleAuth}style={{ width: '300px' }}>
                     <span className="google-icon"><i className="google-icon"></i></span>
                     <span className="google-text">Continue with Google</span>
                 </button>

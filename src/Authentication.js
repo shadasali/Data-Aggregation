@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -6,21 +6,24 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './Authenticate.css';
 import axios from 'axios';
 import app from './firebase';
+import {isEmail} from 'validator';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 function Authentication () {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(true);
-    const [userName, setUserName] = useState('');
+    const [email, setEmail] = useState('');
     const [validationErrors, setValidationErrors] = useState({});
     const [hasErrors, setHasErrors] = useState(false);
-    const [invalidUsername, setInvalidUserName] = useState(false);
+    const [invalidEmail, setInvalidEmail] = useState(false);
+    const [invalidEmailFormat, setInvalidEmailFormat] = useState(false);
     const [invalidPassword, setInvalidPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
 
     const navigate = useNavigate();
 
-    const handleUserName = (e) =>{
-        setUserName(e.target.value);
+    const handleEmail = (e) =>{
+        setEmail(e.target.value);
     }
 
     const handlePasswordChange = (e) => {
@@ -35,10 +38,11 @@ function Authentication () {
         const errors = {};
       
         // Check each input field for empty values
-        if (userName.trim() === '') {
-          errors.userName = 'Email is required';
+        if (email.trim() === '') {
+          errors.email = 'Email is required';
         }
         if (password.trim() === '') {
+            setInvalidPassword(false);
           errors.password = 'Password is required';
         }
       
@@ -49,21 +53,44 @@ function Authentication () {
         return Object.keys(errors).length === 0;
     };
 
+    useEffect(() => {
+        const storedEmail = localStorage.getItem('userEmail');
+        
+        if (storedEmail) {
+          setEmail(storedEmail);
+        }
+      }, []);
+
+      const handleRememberMeChange = (event) =>{
+        setRememberMe(event.target.checked);
+      }
+
     const handleAuthentication = async () =>{
         const isValid = validateInputs();
 
         if (isValid){
             try{
-                const response = await axios.post(`http://localhost:8000/verifyUser?email=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}`);
-
+                if(!isEmail){
+                    setInvalidEmailFormat(true);
+                    return;
+                }
+                const response = await axios.post(`http://localhost:8000/verifyUser?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
+                
                 if (response.data.success){
+                    if (rememberMe) {
+                        localStorage.setItem('userEmail', email);
+                    }
+
                     navigate('/home');
                 }else{
+
                     if(response.data.error === 'INVALID_EMAIL'){
-                        setInvalidUserName(true);
+                        setInvalidPassword(false);
+                        setInvalidEmail(true);
                     }
                     else if(response.data.error ==='INVALID_PASSWORD'){
                         setHasErrors(true);
+                        setInvalidEmail(false);
                         setInvalidPassword(true);
                     }
                 }
@@ -102,7 +129,8 @@ function Authentication () {
     };      
 
     const errorCount = Object.keys(validationErrors).length;
-    const heightIncrease = errorCount * 18;
+    const hasInvalidPassword = invalidPassword ? 1 : 0;
+    const heightIncrease = (errorCount + hasInvalidPassword) * 20;
 
     return(
         <div className="background">
@@ -118,10 +146,11 @@ function Authentication () {
                 <br></br>
                 <div className="authentication-container">
                 <div className='authentication-section'>
-                    <label htmlFor='Username' className='userName'>
-                        <input type = "text" placeholder="Email" value={userName} onChange={handleUserName} className={validationErrors.userName ? 'input-error' : ''} style={{width:'300px', paddingRight: '2.5rem'}} />
-                        {validationErrors.userName && <div className="error-message">{validationErrors.userName}</div>}
-                        {invalidUsername && <div className="error-message">Email does not exist</div>}
+                    <label htmlFor='Email' className='Email'>
+                        <input type = "text" placeholder="Email" value={email} onChange={handleEmail} className={validationErrors.email ? 'input-error' : ''} style={{width:'300px', paddingRight: '2.5rem'}} />
+                        {validationErrors.email && <div className="error-message">{validationErrors.email}</div>}
+                        {invalidEmail && <div className="error-message">Email does not exist</div>}
+                        {invalidEmailFormat && <div className="error-message">Please enter a valid email</div>}
                     </label>
                 </div>
                 <div className='authentication-section'>
@@ -152,11 +181,11 @@ function Authentication () {
                 <br></br>
 
                 <div className="form-check">
-                <input className="form-check-input" style={{marginLeft: '15px'}} type="checkbox" id="remember-checkbox" />
+                <input className="form-check-input" style={{marginLeft: '15px'}} type="checkbox" checked={rememberMe} onChange={handleRememberMeChange} id="remember-checkbox" />
                 <label className="form-check-label" style={{marginLeft: '7.5px'}} htmlFor="remember-checkbox">
                 Remember me
                 </label>
-                <a href="/forgotUsername" className="forgot-link" style={{marginLeft: '80px', textDecoration: 'none'}}>Forgot Password?</a>
+                <Link to="/forgotPassword" className="forgot-link" style={{marginLeft: '80px', textDecoration: 'none'}}>Forgot Password?</Link>
                 </div>
 
                 <div className="line-section">
@@ -179,6 +208,7 @@ function Authentication () {
                     <span className="google-text1">Sign in with Google</span>
                 </button>
                 </div>
+
             </div>
         </div>
         </div>
