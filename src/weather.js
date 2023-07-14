@@ -5,13 +5,13 @@ import Map from "./map"
 import axios from 'axios';
 import { BsFillChatQuoteFill } from "react-icons/bs";
 
-
 const WeatherForecast = () => {
     const location = useLocation();
     const { selectedCity } = location.state || {};
     const [weatherData, setWeatherData] = useState(null);
     const [historicalWeatherData, setHistoricalWeatherData] = useState([]);
     const [weatherDescription, setWeatherDescription] = useState('');
+
     const navigate = useNavigate();
 
 
@@ -54,7 +54,6 @@ const WeatherForecast = () => {
     }
     }, [selectedCity]);
 
-
     useEffect(() => {
         const fetchWeatherData = async () => {
             try {
@@ -64,8 +63,9 @@ const WeatherForecast = () => {
 
               const response = await axios.get(`http://localhost:8000/weather/${selectedCity.name}/${formattedDate}`);
               const data = response.data;
-              
+
               setWeatherData(data);
+
               generateWeatherDescription();
             } catch (error) {
               console.error('Error fetching weather data:', error);
@@ -126,7 +126,6 @@ const WeatherForecast = () => {
                 fetchHistoricalWeatherData();
             }
     }, [selectedCity, generateWeatherDescription]);
-
 
     const formatDayOfWeek = (dateString) => {
         const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

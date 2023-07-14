@@ -2,7 +2,6 @@ const axios = require('axios');
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const validator = require('validator');
 
 require('dotenv').config();
 
@@ -21,31 +20,25 @@ app.use(cors());
 app.post('/createUser', async (req, res) => {
   try {
     // Retrieve email and password from the request body
-    const { email, password, fullName } = req.query;
-    
-    const isValidEmail = validator.isEmail(email);
+    const { email, password, fullname } = req.query;
 
-    if (isValidEmail){
-      const response = await axios.get(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${process.env.HUNTERIO_API_KEY}`);
+    const response = await axios.get(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${process.env.HUNTERIO_API_KEY}`);
 
       if (response.data.data.result === 'deliverable'){
         // Create user account in Firebase Authentication
         const user = await admin.auth().createUser({
           email: email,
           password: password,
-          displayName: fullName,
+          displayName: fullname,
         });
-        
+        console.log(user);
         // Handle success (e.g., send success response)
         res.status(200).json({success:true, message: 'User created successfully' });
       }
       else{
         return res.json({success:false, message: 'Invalid Email'});
       }
-    }
-    else{
-      return res.json({ success: false, error: 'Invalid email address format' });
-    }
+
   } catch (error) {
     // Handle error (e.g., send error response)
     console.error('Error creating user:', error);

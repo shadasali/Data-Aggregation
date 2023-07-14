@@ -5,10 +5,11 @@ import './newUser.css'
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import app from './firebase';
-import { getAuth, signInWithPopup, GoogleAuthProvider} from 'firebase/auth';
+import { getAuth, signInWithPopup, GoogleAuthProvider, fetchSignInMethodsForEmail} from 'firebase/auth';
+import {isEmail} from 'validator';
 
 function NewUser() {
-    const [userName, setUserName] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(true);
     const [firstName, setFirstName] = useState('');
@@ -16,6 +17,8 @@ function NewUser() {
     const [validationErrors, setValidationErrors] = useState({});
     const [hasErrors, setHasErrors] = useState(false);
     const [invalidEmail, setInvalidEmail] = useState(false);
+    const [emailExists, setEmailExists] = useState(false);
+
     const navigate = useNavigate();
     
     const handleLastName = (e) =>{
@@ -26,8 +29,8 @@ function NewUser() {
         setFirstName(e.target.value);
     }
 
-    const handleUserName = (e) =>{
-        setUserName(e.target.value);
+    const handleEmail = (e) =>{
+        setEmail(e.target.value);
     }
 
     const handlePasswordChange = (e) => {
@@ -48,8 +51,8 @@ function NewUser() {
         if (lastName.trim() === '') {
           errors.lastName = 'Last Name is required';
         }
-        if (userName.trim() === '') {
-          errors.userName = 'Username is required';
+        if (email.trim() === '') {
+          errors.email = 'Email is required';
         }
         if (password.trim() === '') {
           errors.password = 'Password is required';
@@ -67,11 +70,25 @@ function NewUser() {
 
         if (isValid){
             try{
+                if (!isEmail(email)) {
+                    setInvalidEmail(true);
+                    return;
+                }
                 const fullName = `${firstName} ${lastName}`;
+                const auth = getAuth();
 
-                const response = await axios.post(`http://localhost:8000/createUser?email=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}&fullname=${encodeURIComponent(fullName)}`);
+                const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+
+                if (signInMethods.length > 0) {
+                    setHasErrors(true);
+                    setEmailExists(true); 
+                    return;
+                }
+
+                const response = await axios.post(`http://localhost:8000/createUser?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&fullname=${encodeURIComponent(fullName)}`);
   
                 if (response.data.success === false){
+                    setHasErrors(true);
                     setInvalidEmail(true);
                 }
                 else{
@@ -113,7 +130,7 @@ function NewUser() {
     };      
 
     const errorCount = Object.keys(validationErrors).length;
-    const heightIncrease = errorCount * 20;
+    const heightIncrease = (errorCount + hasErrors) * 20;
 
     return(
         <div className="background">
@@ -140,10 +157,16 @@ function NewUser() {
                     </label>
                 </div>
                 <div className="newUser-section">
-                    <label htmlFor='Username' className='userName'>
-                        <input type = "text" placeholder="Email" value={userName} onChange={handleUserName} className={validationErrors.userName ? 'input-error' : ''} style={{width:'300px', paddingRight: '2.5rem'}}></input>
-                        {validationErrors.userName && <div className="error-message">{validationErrors.userName}</div>}
+                    <label htmlFor='Email' className='Email'>
+                        <input type = "text" placeholder="Email" value={email} onChange={handleEmail} className={validationErrors.email ? 'input-error' : ''} style={{width:'300px', paddingRight: '2.5rem'}}></input>
+                        {validationErrors.email && <div className="error-message">{validationErrors.email}</div>}
                         {invalidEmail && <div className="error-message">Please enter a valid email</div>}
+                        {emailExists && <div className="error-message">This email already exists, {' '}  
+                            <Link to="/" className="emailExists" style={{textDecoration:'none'}}>
+                                login!
+                            </Link>
+                        </div>}
+                        
                     </label>
                 </div>
                 <div className='newUser-section'>

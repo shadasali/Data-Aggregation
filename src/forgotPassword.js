@@ -2,12 +2,14 @@ import React, {useState} from 'react'
 import './forgotPassword.css';
 import { getAuth, sendPasswordResetEmail, fetchSignInMethodsForEmail } from 'firebase/auth';
 import {isEmail} from 'validator';
+import { useNavigate } from 'react-router-dom';
 
 function ForgotPassword (){
     const [email, setEmail] = useState('');
     const [validationErrors, setValidationErrors] = useState({});
     const [invalidEmail, setInvalidEmail] = useState(false);
     const [invalidEmailFormat, setInvalidEmailFormat] = useState(false);
+    const navigate = useNavigate();
 
     const handleEmail = (e) =>{
         setEmail(e.target.value);
@@ -49,6 +51,7 @@ function ForgotPassword (){
                 else{
                     // Send the password reset email using Firebase Authentication
                     await sendPasswordResetEmail(auth, email);
+                    navigate('/');
                 }
             } catch(error){
                 console.error('Error sending password reset email:', error);

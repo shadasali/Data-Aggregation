@@ -70,8 +70,10 @@ function Authentication () {
 
         if (isValid){
             try{
-                if(!isEmail){
+                if(!isEmail(email)){
                     setInvalidEmailFormat(true);
+                    setInvalidEmail(false);
+                    setInvalidPassword(false);
                     return;
                 }
                 const response = await axios.post(`http://localhost:8000/verifyUser?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
@@ -84,14 +86,16 @@ function Authentication () {
                     navigate('/home');
                 }else{
 
-                    if(response.data.error === 'INVALID_EMAIL'){
+                    if(response.data.error === 'EMAIL_NOT_FOUND'){
                         setInvalidPassword(false);
                         setInvalidEmail(true);
+                        setInvalidEmailFormat(false);
                     }
                     else if(response.data.error ==='INVALID_PASSWORD'){
                         setHasErrors(true);
                         setInvalidEmail(false);
                         setInvalidPassword(true);
+                        setInvalidEmailFormat(false);
                     }
                 }
             } catch(error){
@@ -149,7 +153,11 @@ function Authentication () {
                     <label htmlFor='Email' className='Email'>
                         <input type = "text" placeholder="Email" value={email} onChange={handleEmail} className={validationErrors.email ? 'input-error' : ''} style={{width:'300px', paddingRight: '2.5rem'}} />
                         {validationErrors.email && <div className="error-message">{validationErrors.email}</div>}
-                        {invalidEmail && <div className="error-message">Email does not exist</div>}
+                        {invalidEmail && <div className="error-message">Email does not exist {' '} 
+                        <Link to="/newUser" className="emailNotExists" style={{textDecoration:'none'}}>
+                            sign up!
+                        </Link>
+                        </div>}
                         {invalidEmailFormat && <div className="error-message">Please enter a valid email</div>}
                     </label>
                 </div>
