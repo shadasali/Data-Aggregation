@@ -34,11 +34,14 @@ const News = () => {
       const localDate = new Date(selectedCity.localDate);
       const formattedDate = `${localDate.getFullYear()}-${localDate.getMonth() + 1}-${localDate.getDate()}`;
 
-      const response = await axios.get(`http://localhost:8000/newsDescription/${selectedCity.country}/${formattedDate}`);
+      const response = await axios.post('http://localhost:8000/newsDescription',{
+        country:selectedCity.country,
+        date:formattedDate,
+      });
       
-      const data = response.data;
+      const data = response.data.description;
 
-      setNewsDescription(data.description); // Set the weather description state
+      setNewsDescription(data); // Set the weather description state
       }
     catch (error) {
       console.error('Error generating news description:', error);

@@ -14,7 +14,6 @@ const WeatherForecast = () => {
 
     const navigate = useNavigate();
 
-
     const handleHomeNav = () => {
         navigate('/home');
     };
@@ -36,16 +35,27 @@ const WeatherForecast = () => {
     const generateWeatherDescription = useCallback(async () => {
         
     if (selectedCity) {
-        try{
-        //generates new description everyday
         const localDate = new Date(selectedCity.localDate);
         const formattedDate = `${localDate.getFullYear()}-${localDate.getMonth() + 1}-${localDate.getDate()}`;
 
-        const response = await axios.get(`http://localhost:8000/weatherDescription/${selectedCity.name}/${formattedDate}`);
-        
-        const data = response.data;
+        try {
+            const weatherApiResponse = await axios.get(
+                `http://localhost:8000/oneDayWeather/${selectedCity.name}/${formattedDate}`
+            );
 
-        setWeatherDescription(data.description); // Set the weather description state
+              const currentTemperatureC = weatherApiResponse.data.current.temp_c;
+              const currentTemperatureF = weatherApiResponse.data.current.temp_f;
+
+              const openaiApiResponse = await axios.post('http://localhost:8000/weatherDescription',{
+                city: selectedCity.name,
+                date: formattedDate,
+                currentTempC: currentTemperatureC,
+                currentTempF: currentTemperatureF,
+              });
+              
+            const description = openaiApiResponse.data.description;
+
+            setWeatherDescription(description);
         }
         catch (error) {
             console.error('Error generating weather description:', error);

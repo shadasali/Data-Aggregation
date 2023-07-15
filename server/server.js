@@ -15,6 +15,7 @@ admin.initializeApp({
 
 const firestore = admin.firestore();
 
+app.use(express.json());
 app.use(cors());
 
 app.post('/createUser', async (req, res) => {
@@ -91,6 +92,37 @@ app.get('/news/:country/:date', async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch news articles' });
     }
   }
+});
+
+app.get('/oneDayWeather/:city/:date', async(req, res) =>{
+    const {city, date} = req.params;
+
+    const oneDayWeatherDataRef = firestore.collection('oneDayWeatherData').doc(`${city} - ${date}`);
+    const oneDayWeatherDataSnapshot = await oneDayWeatherDataRef.get();
+
+    if (oneDayWeatherDataSnapshot.exists) {
+      // If the weather data exists, fetch it from Firestore and return as response
+      const weatherData = oneDayWeatherDataSnapshot.data();
+      res.json(weatherData);
+    } else {
+      // If the weather data doesn't exist, make API call to fetch it
+      const apiKey = process.env.WEATHERAPI_API_KEY;
+      const apiUrl = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&dt=${date}&q=${city}&days=1`;
+  
+      try {
+        const response = await axios.get(apiUrl);
+        const data = response.data;
+  
+        // Store the fetched weather data in Firestore
+        await oneDayWeatherDataRef.set(data);
+  
+        // Return the fetched data as the response
+        res.json(data);
+      } catch (error) {
+        console.error('Error fetching weather data:', error);
+        res.status(500).json({ error: 'Failed to fetch weather data' });
+      }
+    }    
 });
 
 app.get('/weather/:city/:date', async (req, res) => {
@@ -184,8 +216,8 @@ app.get('/weather/:city/:date', async (req, res) => {
     }
   });
 
-  app.get('/weatherDescription/:city/:date', async (req, res) =>{
-    const {city, date} = req.params;
+  app.post('/weatherDescription', async (req, res) =>{
+    const {city, date, currentTempC, currentTempF} = req.body;
 
     const weatherDescriptionRef = firestore.collection('weatherDescriptions').doc(`${city}-${date}`);
     const weatherDescriptionsSnapshot = await weatherDescriptionRef.get();
@@ -198,25 +230,26 @@ app.get('/weather/:city/:date', async (req, res) => {
     // If the weather desctiption doesn't exist, make API call to fetch it
     const apiKey = process.env.OPENAI_API_KEY;
     
-    const prompt = `Right now, the weather in ${city} is ___, with a temperature of:__.\n
-        The real feel is temperature:__.\n
-        The forecast for the rest of the week is: ___.\n
+    const prompt = `Right now, the weather in ${city} is ___, with a temperature of:${currentTempC}°C (${currentTempF}°F.\n
         If you decide to go outside, you should wear: ___.\n
         Based on the weather this week, check out these places: ___!`; // Modify the prompt as desired
 
         try {
-            const openaiApiResponse = await axios.post('https://api.openai.com/v1/engines/text-davinci-003/completions', {
-                headers: {
+            const openaiApiResponse = await axios.post(
+                'https://api.openai.com/v1/engines/text-davinci-003/completions',
+                {
+                  prompt: prompt,
+                  max_tokens: 100,
+                  temperature: 0.7,
+                  n: 1,
+                },
+                {
+                  headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`,
-                },
-                body: JSON.stringify({
-                    prompt: prompt,
-                    max_tokens: 150,
-                    temperature: 0.7,
-                    n: 1,
-                }),
-            });
+                  },
+                }
+              );
 
             const weatherDescription = openaiApiResponse.data.choices[0].text.trim();
 
@@ -234,8 +267,8 @@ app.get('/weather/:city/:date', async (req, res) => {
   
   });
 
-  app.get('/newsDescription/:country/:date', async (req, res) =>{
-    const {country, date} = req.params;
+  app.post('/newsDescription', async (req, res) =>{
+    const {country, date} = req.body;
 
     const newsDescriptionRef = firestore.collection('newsDescriptions').doc(`${country}-${date}`);
     const newsDescriptionsSnapshot = await newsDescriptionRef.get();
@@ -251,18 +284,21 @@ app.get('/weather/:city/:date', async (req, res) => {
     const prompt = `Today in ${country}, the top 5 headlines are:\n`;
 
         try {
-            const openaiApiResponse = await axios.post('https://api.openai.com/v1/engines/text-davinci-003/completions', {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                },
-                body: JSON.stringify({
-                    prompt: prompt,
-                    max_tokens: 150,
-                    temperature: 0.7,
-                    n: 1,
-                }),
-            });
+          const openaiApiResponse = await axios.post(
+            'https://api.openai.com/v1/engines/text-davinci-003/completions',
+            {
+              prompt: prompt,
+              max_tokens: 100,
+              temperature: 0.7,
+              n: 1,
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+              },
+            }
+          );
 
             const newsDescription = openaiApiResponse.data.choices[0].text.trim();
 
