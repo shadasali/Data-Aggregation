@@ -12,9 +12,10 @@ On June 7th, a Canadian wildfire caused New York City's air quality to drop sign
 - real-time weather
 - precipitation map
 - 7-day forecast
-- historical weather data
+- 7-day historical weather data
 - top news by location
 - OpenAI-powered summaries for weather & news
+- Sends SMS Notifications depending on the current weather conditions, to all users who sign up
 
 ## Weather Search Page
 On the weather page, you will see the AI summarized current weather plus suggestions based on the weather at the top. Under that, you will see the 7-day forecast which shows information such as the weather, air quality, etc. Below the 7-day forecast, you will see the historical weather data which shows the data for previous days. And finally, at the bottom, you can see the precipitation in your local area or zoom out to see the precipitation around the world.<br><br>
@@ -27,11 +28,11 @@ On the news page, you will see the top news in your area. If you're short on tim
 ## Technology Stack
 **Frontend**
 - React
-- HTML/CSS/JavaScript
+- Firebase Authentication for Google Sign In
 
 **Backend**
 - Node
-- Axios
+- Firestore Database
 - APIs
 
 **APIs**
@@ -39,7 +40,9 @@ On the news page, you will see the top news in your area. If you're short on tim
 - NewsAPI
 - OpenAI ChatGPT API
 - OpenWeatherMap API
-- Geoapify API
+- Geoapify API (Geocoding)
+- Twilio SMS API
+- HunterIO API (Email Validator)
 
 ## Hurdles
 1) Having a pin on the map to show User's selected location
@@ -49,7 +52,7 @@ On the news page, you will see the top news in your area. If you're short on tim
 5) Passing data between React pages
 
 ## Future Iterations
-1) Using Twilio to add SMS notifications for alerts and etc
+1) Allow users to create their own avatar and logout, personalizing the app
 2) Add a Search Bar to Weather and News Page
 
 ## How to Run
