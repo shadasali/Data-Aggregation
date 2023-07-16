@@ -2,6 +2,7 @@ const axios = require('axios');
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const cron = require('node-cron');
 
 require('dotenv').config();
 
@@ -281,7 +282,7 @@ app.get('/weather/:city/:date', async (req, res) => {
     // If the weather desctiption doesn't exist, make API call to fetch it
     const apiKey = process.env.OPENAI_API_KEY;
     
-    const prompt = `Today in ${country}, the top 5 headlines are:\n`;
+    const prompt = `On ${date} in ${country}, the top 3 headlines are:\n`;
 
         try {
           const openaiApiResponse = await axios.post(
@@ -380,7 +381,7 @@ app.get('/weather/:city/:date', async (req, res) => {
     try{
       const{currentLocation} = req.params;
 
-      const { phoneNumber, hotTemperatureValue, coldTemperatureValue, AQIValue} = req.query;
+      const { phoneNumber, hotTemperatureValue, coldTemperatureValue, AQIValue, UVIndex} = req.query;
 
       const userPreferencesDoc = firestore.collection('userSMSPreferences').doc(phoneNumber);
       const userPreferencesSnapshot = await userPreferencesDoc.get();
@@ -391,7 +392,7 @@ app.get('/weather/:city/:date', async (req, res) => {
         if (existingPreferences.currentLocation === currentLocation 
           && existingPreferences.hotTemperatureValue === hotTemperatureValue 
           && existingPreferences.coldTemperatureValue === coldTemperatureValue
-          && existingPreferences.AQIValue === AQIValue){
+          && existingPreferences.AQIValue === AQIValue && existingPreferences.UVIndex === UVIndex){
             return res.json({message: 'Your preferences are already stored'});
           }
 
@@ -410,6 +411,10 @@ app.get('/weather/:city/:date', async (req, res) => {
         if (existingPreferences.AQIValue !== AQIValue){
           existingPreferences.AQIValue = AQIValue;
         }
+        if (existingPreferences.UVIndex !== UVIndex){
+          existingPreferences.UVIndex = UVIndex;
+        }
+
       }
 
       const userData = {
@@ -418,6 +423,7 @@ app.get('/weather/:city/:date', async (req, res) => {
         hotTemperatureValue,
         coldTemperatureValue, 
         AQIValue,
+        UVIndex,
       }
 
       await userPreferencesDoc.set(userData);
@@ -429,7 +435,154 @@ app.get('/weather/:city/:date', async (req, res) => {
     }
   })
 
+  const fetchWeatherConditions = async (city) => {
+    const apiKey = process.env.WEATHERAPI_API_KEY;
+    const response = await axios.get(
+      `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${encodeURIComponent(city)}&days=1&aqi=yes`
+    );
+  
+    return response.data;
+  };
 
+  const sendSMSNotification = async (phoneNumber, message) => {
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+  
+    const client = require('twilio')(accountSid, authToken);
+  
+    await client.messages.create({
+      body: message,
+      from: twilioPhoneNumber,
+      to: phoneNumber,
+    });
+  };
+
+  const getAQIDescription = (aqi) => {
+    switch (aqi) {
+        case 1:
+            return 'Good';
+        case 2:
+            return 'Moderate';
+        case 3:
+            return 'Unhealthy for Sensitive Groups';
+        case 4:
+            return 'Unhealthy';
+        case 5:
+            return 'Very Unhealthy';
+        case 6:
+            return 'Hazardous';
+        default:
+            return '';
+    }
+};
+
+const getUVDescription = (uv) => {
+  if (uv >= 0 && uv <= 2) {
+      return 'Low Intensity';
+  }
+  else if (uv >= 3 && uv <= 5) {
+      return 'Moderate Intensity';
+  }
+  else if (uv >= 6 && uv <= 7) {
+      return 'High Intensity';
+  }
+  else if (uv >= 8 && uv <= 10) {
+      return 'Very High Intensity';
+  }
+  else
+      return 'Extreme Intensity';
+
+};
+
+const convertToCelsius = (temperature) => {
+  return ( Math.ceil((5/9) * (temperature - 32)) );
+}
+
+async function checkWeatherAndSendSMS(phoneNumber) {
+  try {
+    const userPreferencesDoc = firestore.collection('userSMSPreferences').doc(phoneNumber);
+    const userPreferencesSnapshot = await userPreferencesDoc.get();
+
+    if (!userPreferencesSnapshot.exists) {
+      console.log(`User preferences not found for phone number: ${phoneNumber}`);
+      return;
+    }
+
+    const userPreferences = userPreferencesSnapshot.data();
+    const city = userPreferences.currentLocation;
+    const weatherConditions = await fetchWeatherConditions(city);
+    const maxTemperature = weatherConditions.current.temp_f;
+    console.log(maxTemperature);
+    const minTemperature = weatherConditions.current.temp_f;
+    const currentAQI = weatherConditions.current.air_quality?.['us-epa-index'];
+    const currentUVIndex=weatherConditions.current.uv;
+    console.log(currentUVIndex);
+    const hotTemperatureValue = parseFloat(userPreferences.hotTemperatureValue);
+    console.log(hotTemperatureValue);
+    const coldTemperatureValue = parseFloat(userPreferences.coldTemperatureValue);
+    const AQIValue = parseInt(userPreferences.AQIValue);
+    const UVIndex = parseInt(userPreferences.UVIndex);
+    console.log(UVIndex);
+
+    let message = '';
+
+    if (maxTemperature > hotTemperatureValue) {
+      message += `The current temperature in ${city} is ${maxTemperature} °F / ${convertToCelsius(maxTemperature)} °C. Please stay hydrated and wear breathable clothes.`;
+    } 
+    if (minTemperature < coldTemperatureValue) {
+      if (message.length() === 0)
+        message += `The current temperature in ${city} is ${minTemperature} °F / ${convertToCelsius(minTemperature)} °C. Please dress warmly.`;
+      else
+        message += `The current temperature is ${minTemperature} °F / ${convertToCelsius(minTemperature)} °C. Please dress warmly.`;
+    }
+
+    if (currentAQI >= AQIValue) {
+      const aqiMeaning = getAQIDescription(currentAQI);
+      if (message.length() === 0)
+        message += `\nAir Quality for today in ${city} is ${currentAQI} (${aqiMeaning}). Please wear a mask or stay indoors.`;
+      else
+        message += `\nAir Quality for today is ${currentAQI} (${aqiMeaning}). Please wear a mask or stay indoors.`;
+    }
+
+    if (currentUVIndex >= UVIndex){
+      const uvMeaning = getUVDescription(currentUVIndex);
+      if (message.length() === 0)
+        message += `\nUV Index for today in ${city} is ${currentUVIndex} (${uvMeaning}). Please remember to wear sunscreen.`;
+      else
+        message += `\nUV Index for today is ${UVIndex} (${uvMeaning}). Please remember to wear sunscreen.`;
+    }
+
+    console.log(message);
+    if (message) {
+      await sendSMSNotification(phoneNumber, message);
+      console.log(`SMS notification sent successfully to phone number: ${phoneNumber}`);
+    } else {
+      console.log(`Weather conditions are within preferences, no SMS sent for phone number: ${phoneNumber}`);
+    }
+  } catch (error) {
+    console.error('Error checking weather and sending SMS:', error);
+  }
+}
+
+// Schedule cron job to run daily at 6 AM
+cron.schedule('0 6 * * *', async () => {
+  try {
+    // Get all user phone numbers from Firestore
+    const userPreferencesCollection = firestore.collection('userSMSPreferences');
+    const userPreferencesSnapshot = await userPreferencesCollection.get();
+
+    // Loop through each user and perform the weather check and send SMS
+    userPreferencesSnapshot.forEach((doc) => {
+      const phoneNumber = doc.id;
+      checkWeatherAndSendSMS(phoneNumber);
+    });
+
+    console.log('Scheduled SMS notifications sent successfully.');
+  } catch (error) {
+    console.error('Error sending scheduled SMS notifications:', error);
+  }
+});
 
   app.listen(8000, () => {
     console.log('Server is listening on port 8000');

@@ -5,8 +5,9 @@ import axios from 'axios';
 
 const SMSNotifications = () => {
     const[coldTemperatureValue, setcoldTemperatureValue] = useState(5);
-    const[hotTemperatureValue, sethotTemperatureValue] = useState(50);
-    const [AQIValue, setAQIValue] = useState(3);
+    const[hotTemperatureValue, sethotTemperatureValue] = useState(65);
+    const [AQIValue, setAQIValue] = useState(4);
+    const [UVIndex, setUVIndex] = useState(5);
     const [phoneNumber, setPhoneNumber] = useState(null);
 
     const handlehotTemperatureChange = (e) =>{
@@ -20,7 +21,28 @@ const SMSNotifications = () => {
     const handleAQIChange = (e) =>{
         setAQIValue(e.target.value);
     }
+
+    const handleUVIndexChange = (e) =>{
+      setUVIndex(e.target.value);
+    }
     
+    const UVMeanings = (uv) => {
+      if (uv >= 0 && uv <= 2) {
+          return 'Low Intensity';
+      }
+      else if (uv >= 3 && uv <= 5) {
+          return 'Moderate Intensity';
+      }
+      else if (uv >= 6 && uv <= 7) {
+          return 'High Intensity';
+      }
+      else if (uv >= 8 && uv <= 10) {
+          return 'Very High Intensity';
+      }
+      else
+          return 'Extreme Intensity';
+  };
+
     const aqiMeanings = {
         1: 'Good',
         2: 'Moderate',
@@ -74,7 +96,6 @@ const SMSNotifications = () => {
     const handleSMSNotifs = async () =>{
       if (phoneNumber && hotTemperatureValue && coldTemperatureValue && AQIValue){
         const currentLocation = await handleCurrentLocation();
-        console.log(currentLocation);
         
         try{
           const response = await axios.post(`http://localhost:8000/userPreferences/${encodeURIComponent(
@@ -87,8 +108,9 @@ const SMSNotifications = () => {
               coldTemperatureValue
             )}&AQIValue=${encodeURIComponent(
               AQIValue
-            )}`);
+            )}&UVIndex=${encodeURIComponent(UVIndex)}`);
           alert(response.data.message);
+
         } catch(error){
           console.log('Error storing userPreferences', error);
         }
@@ -100,7 +122,6 @@ const SMSNotifications = () => {
 
   return (
     <div className="container">
-        <h2>Enable Text Message Notifications</h2>
       <div className="SMSNotifs border border-primary rounded p-3">
         <p className="fs-4 text-center" style={{ fontFamily: 'Arial' }}> When would you like us to notify you? </p>
         <div className = "range-container">
@@ -114,15 +135,22 @@ const SMSNotifications = () => {
         <div className="range-section">
             <label htmlFor="temperature-range2" className="range-label">
                 <p className="range-text">Temperature goes above: </p>
-                <input type = "range" className = "temperature-slider" id="hot-temperature-range" min = "0" max = "132" value = {hotTemperatureValue} onChange={handlehotTemperatureChange}/>
+                <input type = "range" className = "temperature-slider" id="hot-temperature-range" min = "55" max = "134" value = {hotTemperatureValue} onChange={handlehotTemperatureChange}/>
                 <div className="hot-temperature-value">{hotTemperatureValue} {'°F'} / {convertToCelsius(hotTemperatureValue)} °C</div>
             </label>
         </div>
         <div className="range-section">
             <label htmlFor="AQI-range" className="range-label">
                 <p className="range-text">Air Quality goes above: </p>
-                <input type = "range" className = "AQI-slider" id="AQI-range" min = "1" max = "6" value = {AQIValue} onChange={handleAQIChange}/>
+                <input type = "range" className = "AQI-slider" id="AQI-range" min = "3" max = "6" value = {AQIValue} onChange={handleAQIChange}/>
                 <div className="AQI-value">{AQIValue} - {aqiMeanings[AQIValue]}</div>
+            </label>
+        </div>
+        <div className="range-section">
+            <label htmlFor="UV-range" className="range-label">
+                <p className="range-text">UV Index goes above: </p>
+                <input type = "range" className = "UV-slider" id="UV-range" min = "3" max = "12" value = {UVIndex} onChange={handleUVIndexChange}/>
+                <div className="UV-value">{UVIndex} - {UVMeanings(UVIndex)}</div>
             </label>
         </div>
         </div>
