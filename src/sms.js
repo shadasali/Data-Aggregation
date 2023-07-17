@@ -8,7 +8,10 @@ const SMSNotifications = () => {
     const[hotTemperatureValue, sethotTemperatureValue] = useState(65);
     const [AQIValue, setAQIValue] = useState(4);
     const [UVIndex, setUVIndex] = useState(5);
+    const[stringPhoneNumber, setStringPhoneNumber] = useState('');
     const [phoneNumber, setPhoneNumber] = useState(null);
+    const [validationErrors, setValidationErrors] = useState({});
+    const [invalidPhoneNumber, setInvalidPhoneNumber] = useState(false);
 
     const handlehotTemperatureChange = (e) =>{
         sethotTemperatureValue(e.target.value);
@@ -57,8 +60,29 @@ const SMSNotifications = () => {
     }
 
     const handlePhoneNumberChange = (e) =>{
-        setPhoneNumber(e.target.value);
+        setStringPhoneNumber(e.target.value);
     }
+
+    const validateInputs = () => {
+      const errors = {};
+    
+      const tempPhoneNumber = parseInt(stringPhoneNumber, 10);
+
+      // Check each input field for empty values
+      if (isNaN(tempPhoneNumber) || tempPhoneNumber.toString().trim() === '') {
+        errors.phoneNumber = 'Valid Phone number is required.';
+        setInvalidPhoneNumber(false);
+      }
+      else{
+        setPhoneNumber(tempPhoneNumber);
+      }
+      
+      // Update the validation errors state
+      setValidationErrors(errors);
+    
+      // Return true if there are no validation errors
+      return Object.keys(errors).length === 0;
+    };
 
     const handleCurrentLocation = () => {
       return new Promise((resolve, reject) => {
@@ -94,11 +118,19 @@ const SMSNotifications = () => {
     };
 
     const handleSMSNotifs = async () =>{
-      if (phoneNumber && hotTemperatureValue && coldTemperatureValue && AQIValue){
-        const currentLocation = await handleCurrentLocation();
-        
-        try{
-          const response = await axios.post(`http://localhost:8000/userPreferences/${encodeURIComponent(
+      const isValid = validateInputs();
+
+      if (isValid){
+
+        if (phoneNumber && hotTemperatureValue && coldTemperatureValue && AQIValue){
+          const verified = await axios.get(`http://localhost:8000/verifyPhoneNumber/${encodeURIComponent(phoneNumber)}`);
+
+          if (verified.data.valid === true){
+            
+            const currentLocation = await handleCurrentLocation();
+            
+            try{
+              const response = await axios.post(`http://localhost:8000/userPreferences/${encodeURIComponent(
             currentLocation
             )}?phoneNumber=${encodeURIComponent(
               phoneNumber
@@ -109,14 +141,17 @@ const SMSNotifications = () => {
             )}&AQIValue=${encodeURIComponent(
               AQIValue
             )}&UVIndex=${encodeURIComponent(UVIndex)}`);
-          alert(response.data.message);
 
-        } catch(error){
-          console.log('Error storing userPreferences', error);
+              alert(response.data.message);
+
+            } catch(error){
+              console.log('Error storing userPreferences', error);
+            }
+          }
+          else{
+            setInvalidPhoneNumber(true);
+          }
         }
-      }
-      else{
-        alert("Please Enter Your Phone Number");
       }
     }
 
@@ -155,9 +190,13 @@ const SMSNotifications = () => {
             </label>
         </div>
         </div>
-        <p className="mb-1 text-center">Enter your phone number:</p>
+        <p className="d-flex justify-content-center"> Enter your phone number with the area code: </p>
         <div className="input-group mb-3">
-          <input type="text" className="form-control" value = {phoneNumber} onChange={handlePhoneNumberChange} />
+        <label htmlFor='phoneNumber' className='phoneNumber'>
+          <input type="text" placeholder="Phone number" className={validationErrors.phoneNumber ? 'input-error' : ''} value = {stringPhoneNumber} onChange={handlePhoneNumberChange} style={{width:'460px', paddingRight: '2.5rem'}}/>
+          {validationErrors.phoneNumber && <div className="error-message"> {validationErrors.phoneNumber} </div>}
+          {invalidPhoneNumber && <div className="error-message"> Invalid phone number </div>}
+        </label>
         </div>
         <div className="d-flex justify-content-center">
           <button className="btn btn-primary" type="button" onClick={handleSMSNotifs}>

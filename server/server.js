@@ -375,6 +375,18 @@ app.get('/weather/:city/:date', async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch suggestions' });
     }
   }
+  });
+
+  app.get('/verifyPhoneNumber/:phoneNumber', async (req,res) =>{
+    try{
+      const{phoneNumber} = req.params;
+
+      const response = await axios.get(`http://apilayer.net/api/validate?access_key=${process.env.NUMVERIFY_API_KEY}&number=${encodeURIComponent(phoneNumber)}`);
+      res.json(response.data);
+    }catch(error){
+      console.error('Error verifying phone number:', error);
+      res.status(500).json({ error: 'Failed to verify phone number' });
+    }
   })
 
   app.post('/userPreferences/:currentLocation', async (req, res) => {
@@ -437,11 +449,25 @@ app.get('/weather/:city/:date', async (req, res) => {
 
   const fetchWeatherConditions = async (city) => {
     const apiKey = process.env.WEATHERAPI_API_KEY;
-    const response = await axios.get(
-      `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${encodeURIComponent(city)}&days=1&aqi=yes`
-    );
-  
-    return response.data;
+    
+    const today = new Date();
+    const formattedDate = `${today.getMonth() + 1}-${today.getDate()}-${today.getFullYear()}`;
+
+    const oneDayWeatherDataRef = firestore.collection('oneDayWeatherData').doc(`${city} - ${formattedDate}`);
+    const oneDayWeatherDataSnapshot = await oneDayWeatherDataRef.get();
+
+    if (oneDayWeatherDataSnapshot.exists){
+      const weatherData = oneDayWeatherDataSnapshot.data();
+      return weatherData;
+    }
+    else{
+      const response = await axios.get(
+        `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${encodeURIComponent(city)}&days=1&aqi=yes`
+      );
+      
+      await oneDayWeatherDataRef.set(response.data);
+      return response.data;
+    }
   };
 
   const sendSMSNotification = async (phoneNumber, message) => {
@@ -513,17 +539,14 @@ async function checkWeatherAndSendSMS(phoneNumber) {
     const city = userPreferences.currentLocation;
     const weatherConditions = await fetchWeatherConditions(city);
     const maxTemperature = weatherConditions.current.temp_f;
-    console.log(maxTemperature);
     const minTemperature = weatherConditions.current.temp_f;
     const currentAQI = weatherConditions.current.air_quality?.['us-epa-index'];
     const currentUVIndex=weatherConditions.current.uv;
-    console.log(currentUVIndex);
     const hotTemperatureValue = parseFloat(userPreferences.hotTemperatureValue);
-    console.log(hotTemperatureValue);
     const coldTemperatureValue = parseFloat(userPreferences.coldTemperatureValue);
     const AQIValue = parseInt(userPreferences.AQIValue);
     const UVIndex = parseInt(userPreferences.UVIndex);
-    console.log(UVIndex);
+
 
     let message = '';
 
@@ -531,7 +554,7 @@ async function checkWeatherAndSendSMS(phoneNumber) {
       message += `The current temperature in ${city} is ${maxTemperature} °F / ${convertToCelsius(maxTemperature)} °C. Please stay hydrated and wear breathable clothes.`;
     } 
     if (minTemperature < coldTemperatureValue) {
-      if (message.length() === 0)
+      if (message.trim() === '')
         message += `The current temperature in ${city} is ${minTemperature} °F / ${convertToCelsius(minTemperature)} °C. Please dress warmly.`;
       else
         message += `The current temperature is ${minTemperature} °F / ${convertToCelsius(minTemperature)} °C. Please dress warmly.`;
@@ -539,7 +562,7 @@ async function checkWeatherAndSendSMS(phoneNumber) {
 
     if (currentAQI >= AQIValue) {
       const aqiMeaning = getAQIDescription(currentAQI);
-      if (message.length() === 0)
+      if (message.trim() === '')
         message += `\nAir Quality for today in ${city} is ${currentAQI} (${aqiMeaning}). Please wear a mask or stay indoors.`;
       else
         message += `\nAir Quality for today is ${currentAQI} (${aqiMeaning}). Please wear a mask or stay indoors.`;
@@ -547,7 +570,7 @@ async function checkWeatherAndSendSMS(phoneNumber) {
 
     if (currentUVIndex >= UVIndex){
       const uvMeaning = getUVDescription(currentUVIndex);
-      if (message.length() === 0)
+      if (message.trim() === '')
         message += `\nUV Index for today in ${city} is ${currentUVIndex} (${uvMeaning}). Please remember to wear sunscreen.`;
       else
         message += `\nUV Index for today is ${UVIndex} (${uvMeaning}). Please remember to wear sunscreen.`;
@@ -566,7 +589,7 @@ async function checkWeatherAndSendSMS(phoneNumber) {
 }
 
 // Schedule cron job to run daily at 6 AM
-cron.schedule('0 6 * * *', async () => {
+cron.schedule('48 13 * * *', async () => {
   try {
     // Get all user phone numbers from Firestore
     const userPreferencesCollection = firestore.collection('userSMSPreferences');

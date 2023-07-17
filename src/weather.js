@@ -35,8 +35,8 @@ const WeatherForecast = () => {
     const generateWeatherDescription = useCallback(async () => {
         
     if (selectedCity) {
-        const localDate = new Date(selectedCity.localDate);
-        const formattedDate = `${localDate.getFullYear()}-${localDate.getMonth() + 1}-${localDate.getDate()}`;
+        const today = new Date();
+        const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
 
         try {
             const weatherApiResponse = await axios.get(
