@@ -121,13 +121,14 @@ const SMSNotifications = () => {
     }
 
   return (
+    <div className="background">
     <div className="container">
       <div className="SMSNotifs border border-primary rounded p-3">
         <p className="fs-4 text-center" style={{ fontFamily: 'Arial' }}> When would you like us to notify you? </p>
         <div className = "range-container">
         <div className="range-section">
             <label htmlFor="temperature-range1" className="range-label">
-                <p className="range-text">Temperature goes below): </p>
+                <p className="range-text">Temperature goes below: </p>
                 <input type = "range" className = "temperature-slider" id="cold-temperature-range" min = "-30" max = "40" value = {coldTemperatureValue} onChange={handlecoldTemperatureChange}/>
                 <div className="cold-temperature-value">{coldTemperatureValue} °F / {convertToCelsius(coldTemperatureValue)} °C</div>
             </label>
@@ -165,6 +166,7 @@ const SMSNotifications = () => {
           <span />
         </div>
       </div>
+    </div>
     </div>
   );
 };

@@ -1,3 +1,10 @@
+.background{
+  background-image: url('/public/cloudgiphy.gif');
+  background-color:#6f9aeb;
+  background-size: cover;
+  height: 100vh;
+}
+
 .container {
     display: flex;
     flex-direction: column;
@@ -15,6 +22,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    background-color:aliceblue;
+    box-shadow: -5px 5px lavender;
   }
 
   .range-container {
