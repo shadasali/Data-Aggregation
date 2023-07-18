@@ -33,7 +33,7 @@ app.post('/createUser', async (req, res) => {
           password: password,
           displayName: fullname,
         });
-        console.log(user);
+
         // Handle success (e.g., send success response)
         res.status(200).json({success:true, message: 'User created successfully' });
       }
