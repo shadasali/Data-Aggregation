@@ -120,9 +120,6 @@ function NewUser() {
 
           const { user, credential } = result;
         
-          console.log('Authenticated user:', user);
-          console.log('Google credential:', credential);
-        
           navigate('/home');
         } catch (error) {
           console.error('Error authenticating with Firebase:', error);

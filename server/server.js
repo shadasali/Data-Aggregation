@@ -576,7 +576,6 @@ async function checkWeatherAndSendSMS(phoneNumber) {
         message += `\nUV Index for today is ${UVIndex} (${uvMeaning}). Please remember to wear sunscreen.`;
     }
 
-    console.log(message);
     if (message) {
       await sendSMSNotification(phoneNumber, message);
       console.log(`SMS notification sent successfully to phone number: ${phoneNumber}`);

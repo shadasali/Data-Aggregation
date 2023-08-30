@@ -33,7 +33,6 @@ const News = () => {
       //Generates new description everyday
       const today = new Date();
       const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-      console.log(formattedDate);
       
       const response = await axios.post('http://localhost:8000/newsDescription',{
         country:selectedCity.country,
